@@ -85,15 +85,14 @@ function StepCard({
           </button>
         </div>
         <div className="step-body">
-          <div className="step-meta"><span>LEVEL {node.depth}</span><span>STEP {String(index + 1).padStart(2, "0")}</span></div>
-          <h3>{node.title}</h3>
+          <div className="step-title-row"><h3>{node.title}</h3><span className="step-index">{node.depth}-{index + 1}</span></div>
           <p>{node.description}</p>
           <div className="step-actions">
             <span className="time-chip">{formatMinutes(node.estimatedMinutes)}</span>
             <Button variant="ghost" size="sm" onClick={() => onAddContext(node)} disabled={Boolean(busyTarget)}><Lightbulb size={15} /> Add context</Button>
             <Button variant="secondary" size="sm" onClick={() => onBreakdown(node)} disabled={Boolean(busyTarget) || atLimit || tooSmall} title={atLimit ? `Maximum depth of ${MAX_STEP_DEPTH} reached` : undefined}>
               {busy ? <LoaderCircle className="spin" size={15} /> : atLimit ? <LockKeyhole size={15} /> : <GitBranchPlus size={15} />}
-              {busy ? "Working…" : atLimit ? "Depth limit" : hasChildren ? "Regenerate children" : "Break it down"}
+              {busy ? "Working…" : atLimit ? "Depth limit" : hasChildren ? "Regenerate" : "Break it down"}
             </Button>
           </div>
         </div>

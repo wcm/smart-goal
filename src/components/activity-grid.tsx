@@ -24,13 +24,9 @@ export function ActivityGrid({ events }: { events: ActivityEvent[] }) {
   return (
     <section className="activity-card">
       <div className="activity-heading">
-        <div>
-          <span className="section-label">CONSISTENCY</span>
-          <h2>Your progress garden</h2>
-          <p>Every square is a day you moved a goal forward.</p>
-        </div>
+        <h2>Activity</h2>
         <div className="streak-stats">
-          <div><span><Flame size={16} /> Current</span><strong>{current}<small> days</small></strong></div>
+          <div><span><Flame size={15} /> Current</span><strong>{current}<small> days</small></strong></div>
           <div><span>Longest</span><strong>{longest}<small> days</small></strong></div>
         </div>
       </div>

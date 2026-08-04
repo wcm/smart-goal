@@ -47,7 +47,6 @@ export function LoginCard({ nextPath, demoMode }: { nextPath: string; demoMode: 
         {loading ? "Opening Google…" : "Continue with Google"}
       </Button>
       {error && <p className="form-error" role="alert">{error}</p>}
-      <p>By continuing, you agree to keep your account information accurate and use Goal Planner responsibly.</p>
     </div>
   );
 }

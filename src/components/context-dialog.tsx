@@ -1,20 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Lightbulb, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { GeneratedQuestion } from "@/lib/planner/types";
 
 export function ContextDialog({
   open,
-  title,
+  subject,
   questions,
   busy,
   onClose,
   onSubmit,
 }: {
   open: boolean;
-  title: string;
+  subject: string;
   questions: GeneratedQuestion[];
   busy: boolean;
   onClose: () => void;
@@ -25,7 +25,7 @@ export function ContextDialog({
   return (
     <ContextDialogContent
       key={questions.map((question) => question.question).join("|")}
-      title={title}
+      subject={subject}
       questions={questions}
       busy={busy}
       onClose={onClose}
@@ -35,13 +35,13 @@ export function ContextDialog({
 }
 
 function ContextDialogContent({
-  title,
+  subject,
   questions,
   busy,
   onClose,
   onSubmit,
 }: {
-  title: string;
+  subject: string;
   questions: GeneratedQuestion[];
   busy: boolean;
   onClose: () => void;
@@ -57,16 +57,14 @@ function ContextDialogContent({
     }}>
       <section className="context-dialog" role="dialog" aria-modal="true" aria-labelledby="context-title">
         <div className="dialog-heading">
-          <span className="dialog-icon"><Lightbulb size={20} /></span>
-          <div><span className="section-label">ADD CONTEXT</span><h2 id="context-title">{title}</h2></div>
+          <h2 id="context-title">Add context</h2>
           <button className="icon-button" onClick={onClose} disabled={busy} aria-label="Close dialog"><X size={19} /></button>
         </div>
-        <p className="dialog-intro">A little context helps Goal Planner make the next version more realistic for you. Skip anything that does not matter.</p>
+        <p className="context-subject">{subject}</p>
         <div className="question-list">
           {questions.map((question, index) => (
             <label key={`${question.question}-${index}`}>
-              <span><strong>{index + 1}.</strong> {question.question}</span>
-              <small>{question.reason}</small>
+              <span><strong>{index + 1}</strong> {question.question}</span>
               <textarea
                 value={answers[index] ?? ""}
                 onChange={(event) => setAnswers((current) => current.map((answer, answerIndex) => answerIndex === index ? event.target.value : answer))}

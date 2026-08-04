@@ -16,9 +16,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <main className="login-page">
       <Logo />
       <section className="login-card">
-        <span className="eyebrow"><span /> Welcome to Goal Planner</span>
-        <h1>Keep your plans<br /><em>moving with you.</em></h1>
-        <p>Sign in once to save multiple goals, sync progress, and build a streak that reflects real work.</p>
+        <h1>Sign in to continue</h1>
+        <p>Save your plans and keep progress in sync.</p>
         <LoginCard nextPath={nextPath} demoMode={!hasSupabaseConfig()} />
       </section>
     </main>

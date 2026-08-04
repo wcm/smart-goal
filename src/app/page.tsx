@@ -3,12 +3,86 @@ import { GoalCapture } from "@/components/goal-capture";
 import { SiteHeader } from "@/components/site-header";
 import { getViewer } from "@/lib/supabase/server";
 
-const demoSteps = [
-  { title: "Define your ideal reader", time: "45m", complete: true },
-  { title: "Choose a useful weekly format", time: "1h 15m", complete: true },
-  { title: "Create the first three issues", time: "5h", complete: false },
-  { title: "Set up a simple publishing workflow", time: "2h", complete: false },
+const examplePlans = [
+  {
+    title: "Launch a newsletter people love",
+    progress: 31,
+    total: "9h",
+    tone: "violet",
+    steps: [
+      { title: "Define your ideal reader", time: "45m", complete: true },
+      {
+        title: "Create the first three issues",
+        time: "5h",
+        children: ["Outline each issue", "Write and edit issue one"],
+      },
+      { title: "Set up a publishing rhythm", time: "2h" },
+    ],
+  },
+  {
+    title: "Run my first half marathon",
+    progress: 18,
+    total: "44h",
+    tone: "blue",
+    steps: [
+      { title: "Choose a realistic race date", time: "30m", complete: true },
+      {
+        title: "Build a 12-week training plan",
+        time: "1h",
+        children: ["Set weekly mileage", "Schedule recovery weeks"],
+      },
+      { title: "Complete the first base week", time: "4h" },
+    ],
+  },
+  {
+    title: "Learn conversational Spanish",
+    progress: 42,
+    total: "36h",
+    tone: "coral",
+    steps: [
+      { title: "Define a six-month milestone", time: "30m", complete: true },
+      {
+        title: "Create a weekly practice loop",
+        time: "3h",
+        children: ["Book one speaking session", "Review 20 useful phrases"],
+      },
+      { title: "Practice a travel conversation", time: "1h" },
+    ],
+  },
 ];
+
+function ExamplePlan({ plan }: { plan: (typeof examplePlans)[number] }) {
+  return (
+    <article className={`example-plan tone-${plan.tone}`}>
+      <div className="example-plan-head">
+        <span className="example-orb" aria-hidden="true" />
+        <span>{plan.progress}%</span>
+      </div>
+      <h3>{plan.title}</h3>
+      <div className="example-progress"><span style={{ width: `${plan.progress}%` }} /></div>
+      <div className="example-steps">
+        {plan.steps.map((step, index) => (
+          <div className="example-step-group" key={step.title}>
+            <div className={`example-step ${step.complete ? "done" : ""}`}>
+              <span className="example-check">{step.complete && <Check size={12} />}</span>
+              <div><strong>{step.title}</strong></div>
+              <span className="example-time"><Timer size={13} /> {step.time}</span>
+              <span className="example-index">1-{index + 1}</span>
+            </div>
+            {step.children && (
+              <div className="example-children">
+                {step.children.map((child, childIndex) => (
+                  <div key={child}><span />{child}<small>2-{childIndex + 1}</small></div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      <footer><span>{plan.total} total</span><span>{plan.steps.length + 2} steps</span></footer>
+    </article>
+  );
+}
 
 export default async function Home() {
   const viewer = await getViewer();
@@ -17,85 +91,36 @@ export default async function Home() {
     <main className="marketing-page">
       <SiteHeader viewer={viewer?.isDemo ? null : viewer} />
       <section className="hero page-shell">
-        <div className="eyebrow"><span /> AI planning that stays practical</div>
-        <h1>Make the next step<br /><em>feel obvious.</em></h1>
-        <p className="hero-copy">
-          Turn any ambition into a clear, time-estimated plan. Add what matters,
-          break down what feels big, and build momentum one honest step at a time.
-        </p>
-        <GoalCapture />
+        <div className="hero-aura" aria-hidden="true"><span /><span /><span /></div>
+        <div className="hero-pill">AI planning, made practical</div>
+        <h1>Turn any goal into<br />a plan you can <span>finish.</span></h1>
+        <p className="hero-copy">Clear steps, honest time estimates, and as much detail as you need.</p>
+        <GoalCapture showSuggestions />
       </section>
 
-      <section className="product-preview page-shell" aria-label="Goal Planner product preview">
-        <div className="preview-glow" />
-        <div className="preview-window">
-          <div className="preview-sidebar">
-            <div className="mini-logo">G</div>
-            <span className="side-pill active" />
-            <span className="side-pill" />
-            <span className="side-pill short" />
-          </div>
-          <div className="preview-content">
-            <div className="preview-heading">
-              <div>
-                <span className="preview-kicker">YOUR PLAN</span>
-                <h3>Launch a newsletter people love</h3>
-              </div>
-              <div className="preview-progress"><strong>31%</strong><span>complete</span></div>
-            </div>
-            <div className="progress-track"><span style={{ width: "31%" }} /></div>
-            <div className="preview-steps">
-              {demoSteps.map((step, index) => (
-                <div className={`preview-step ${step.complete ? "done" : ""}`} key={step.title}>
-                  <span className="preview-check">{step.complete && <Check size={13} />}</span>
-                  <span className="preview-number">0{index + 1}</span>
-                  <div><strong>{step.title}</strong><small>A focused outcome with room to go deeper.</small></div>
-                  <span className="preview-time"><Timer size={13} /> {step.time}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+      <section className="plan-gallery page-shell" aria-label="Example plans">
+        <div className="gallery-heading"><h2>Plans that meet you where you are.</h2></div>
+        <div className="example-grid">
+          {examplePlans.map((plan) => <ExamplePlan key={plan.title} plan={plan} />)}
         </div>
       </section>
 
       <section className="how-it-works page-shell">
-        <div className="section-intro">
-          <span className="eyebrow"><span /> How it works</span>
-          <h2>A plan that gets clearer<br />as you use it.</h2>
-        </div>
+        <div className="section-intro"><h2>From idea to action.</h2></div>
         <div className="feature-grid">
-          <article>
-            <span className="feature-number">01</span>
-            <div className="feature-icon"><GitBranch /></div>
-            <h3>Start with the big picture</h3>
-            <p>Describe the outcome. Goal Planner turns it into a sequenced plan with realistic time estimates.</p>
-          </article>
-          <article>
-            <span className="feature-number">02</span>
-            <div className="feature-icon"><ArrowDown /></div>
-            <h3>Go as deep as you need</h3>
-            <p>Break down any vague or intimidating step, layer by layer, while keeping the time honest.</p>
-          </article>
-          <article>
-            <span className="feature-number">03</span>
-            <div className="feature-icon"><RefreshCw /></div>
-            <h3>Let the plan learn</h3>
-            <p>Add context whenever life changes. Regenerate the relevant branch without losing the bigger goal.</p>
-          </article>
+          <article><div className="feature-icon"><GitBranch /></div><h3>Start with the outcome</h3><p>Get a sequenced plan with realistic estimates.</p></article>
+          <article><div className="feature-icon"><ArrowDown /></div><h3>Break down the hard parts</h3><p>Go deeper until every next action is clear.</p></article>
+          <article><div className="feature-icon"><RefreshCw /></div><h3>Adjust as life changes</h3><p>Add context and rebuild only what needs to change.</p></article>
         </div>
       </section>
 
       <section className="closing-cta">
         <div className="page-shell">
-          <span className="eyebrow light"><span /> Your goal is worth a good plan</span>
-          <h2>Start with what you know.<br /><em>Refine as you go.</em></h2>
+          <h2>What do you want to achieve?</h2>
           <GoalCapture />
         </div>
       </section>
-      <footer className="marketing-footer page-shell">
-        <span>© {new Date().getFullYear()} Goal Planner</span>
-        <span>Built for thoughtful progress.</span>
-      </footer>
+      <footer className="marketing-footer page-shell">© {new Date().getFullYear()} Goal Planner</footer>
     </main>
   );
 }

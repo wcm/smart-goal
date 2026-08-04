@@ -237,37 +237,36 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
     return <main className="planner page-shell app-shell"><div className="planner-loading"><LoaderCircle className="spin" /><span>Opening your plan…</span></div></main>;
   }
   if (!plan) {
-    return <main className="planner page-shell app-shell"><div className="empty-plans"><h2>Plan not found</h2><p>It may have been removed or belong to a different account.</p><Link className="button button-secondary" href="/plans">Back to plans</Link></div></main>;
+    return <main className="planner page-shell app-shell"><div className="empty-plans empty-plans-detailed"><h2>Plan not found</h2><p>It may have been removed or belong to a different account.</p><Link className="button button-secondary" href="/plans">Back to plans</Link></div></main>;
   }
 
   return (
     <main className="planner page-shell app-shell">
-      <div className="planner-breadcrumb"><Link href="/plans"><ArrowLeft size={16} /> All plans</Link><span>/</span><span>{plan.title}</span></div>
+      <div className="planner-breadcrumb"><Link href="/plans"><ArrowLeft size={16} /> All plans</Link></div>
       {viewer.isDemo && <div className="demo-banner"><Sparkles size={16} /> Demo mode — AI responses are deterministic and this plan lives only in this browser.</div>}
       {error && <div className="error-card floating-message" role="alert">{error}<button onClick={() => setError("")}>×</button></div>}
       {notice && <div className="success-card floating-message"><CheckCircle2 size={17} />{notice}<button onClick={() => setNotice("")}>×</button></div>}
 
       <section className="planner-hero">
-        <div className="planner-title"><span className="section-label">YOUR GOAL</span><h1>{plan.title}</h1><p>{plan.summary}</p></div>
-        <Button variant="secondary" onClick={() => askForContext(null)} disabled={Boolean(busyTarget)}>{busyTarget === "plan-context" ? <LoaderCircle className="spin" size={17} /> : <Lightbulb size={17} />} Add context & update</Button>
+        <div className="planner-title"><h1>{plan.title}</h1><p>{plan.summary}</p></div>
+        <Button variant="secondary" onClick={() => askForContext(null)} disabled={Boolean(busyTarget)}>{busyTarget === "plan-context" ? <LoaderCircle className="spin" size={17} /> : <Lightbulb size={17} />} Add context</Button>
       </section>
 
       <section className="plan-overview">
-        <div className="progress-ring" style={{ "--progress": `${progress?.percentage ?? 0}%` } as React.CSSProperties}><span><strong>{progress?.percentage ?? 0}%</strong><small>complete</small></span></div>
-        <div className="overview-progress"><div><span>Overall progress</span><strong>{progress?.completedMinutes ?? 0} of {progress?.totalMinutes ?? 0} minutes</strong></div><div className="progress-track"><span style={{ width: `${progress?.percentage ?? 0}%` }} /></div><small>Progress is weighted by the estimated time of your smallest active steps.</small></div>
-        <div className="overview-time"><Clock3 size={20} /><span><small>Estimated total</small><strong>{formatMinutes(progress?.totalMinutes ?? 0)}</strong></span></div>
+        <div className="overview-progress"><div><strong>{progress?.percentage ?? 0}%</strong><span>{progress?.completedMinutes ?? 0} / {progress?.totalMinutes ?? 0} min</span></div><div className="progress-track"><span style={{ width: `${progress?.percentage ?? 0}%` }} /></div></div>
+        <div className="overview-time"><Clock3 size={18} /><span><small>Total time</small><strong>{formatMinutes(progress?.totalMinutes ?? 0)}</strong></span></div>
       </section>
 
       {plan.assumptions.length > 0 && <details className="assumptions"><summary>Planning assumptions</summary><ul>{plan.assumptions.map((assumption) => <li key={assumption}>{assumption}</li>)}</ul></details>}
 
       <section className="plan-steps-section">
-        <div className="steps-heading"><div><span className="section-label">THE PATH FORWARD</span><h2>Your next steps</h2></div><p>Complete a step, add context, or keep breaking it down until the next action feels obvious.</p></div>
+        <div className="steps-heading"><h2>Steps</h2></div>
         <StepTree nodes={tree} busyTarget={busyTarget} onToggle={toggle} onBreakdown={(step) => breakDown(step)} onAddContext={askForContext} />
       </section>
 
       <ContextDialog
         open={Boolean(contextTarget)}
-        title={contextTarget?.step ? `Make “${contextTarget.step.title}” fit better` : "Update the whole plan"}
+        subject={contextTarget?.step?.title ?? plan.title}
         questions={contextTarget?.questions ?? []}
         busy={contextBusy}
         onClose={() => setContextTarget(null)}

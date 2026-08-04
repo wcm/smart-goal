@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Lightbulb, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Lightbulb } from "lucide-react";
 import { ContextDialog } from "@/components/context-dialog";
 import { Button } from "@/components/ui/button";
 import { postAi } from "@/lib/ai/client";
@@ -100,12 +100,9 @@ export function NewPlanClient({ viewer, initialGoal }: { viewer: Viewer; initial
     <main className="new-plan page-shell app-shell narrow-shell">
       <Link href="/plans" className="back-link"><ArrowLeft size={16} /> Back to plans</Link>
       <section className="new-plan-card">
-        <span className="new-plan-orbit"><Sparkles size={25} /></span>
-        <span className="eyebrow"><span /> A fresh start</span>
-        <h1>What do you want<br /><em>to make happen?</em></h1>
-        <p>Describe the outcome in your own words. It can be ambitious, messy, or incomplete—we’ll shape it together.</p>
+        <h1>What do you want to achieve?</h1>
         <label className="large-goal-input">
-          <span>Your goal</span>
+          <span className="visually-hidden">Your goal</span>
           <textarea
             value={goal}
             onChange={(event) => setGoal(event.target.value)}
@@ -125,11 +122,10 @@ export function NewPlanClient({ viewer, initialGoal }: { viewer: Viewer; initial
             {busy === "plan" ? "Building your plan…" : "How do I achieve it?"} <ArrowRight size={18} />
           </Button>
         </div>
-        <div className="privacy-note"><span>Private by default</span><span>•</span><span>Editable at every level</span><span>•</span><span>Realistic time estimates</span></div>
       </section>
       <ContextDialog
         open={dialogOpen}
-        title="Help us shape the first plan"
+        subject={goal.trim() || "New plan"}
         questions={questions}
         busy={busy === "plan"}
         onClose={() => setDialogOpen(false)}
