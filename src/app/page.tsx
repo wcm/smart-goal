@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowDown, Check, GitBranch, RefreshCw, Timer } from "lucide-react";
 import { GoalCapture } from "@/components/goal-capture";
 import { SiteHeader } from "@/components/site-header";
@@ -9,6 +10,7 @@ const examplePlans = [
     progress: 31,
     total: "9h",
     tone: "violet",
+    emoji: "💌",
     steps: [
       { title: "Define your ideal reader", time: "45m", complete: true },
       {
@@ -24,6 +26,7 @@ const examplePlans = [
     progress: 18,
     total: "44h",
     tone: "blue",
+    emoji: "🏃",
     steps: [
       { title: "Choose a realistic race date", time: "30m", complete: true },
       {
@@ -39,6 +42,7 @@ const examplePlans = [
     progress: 42,
     total: "36h",
     tone: "coral",
+    emoji: "💬",
     steps: [
       { title: "Define a six-month milestone", time: "30m", complete: true },
       {
@@ -55,24 +59,23 @@ function ExamplePlan({ plan }: { plan: (typeof examplePlans)[number] }) {
   return (
     <article className={`example-plan tone-${plan.tone}`}>
       <div className="example-plan-head">
-        <span className="example-orb" aria-hidden="true" />
+        <span className="example-emoji" aria-hidden="true">{plan.emoji}</span>
         <span>{plan.progress}%</span>
       </div>
       <h3>{plan.title}</h3>
       <div className="example-progress"><span style={{ width: `${plan.progress}%` }} /></div>
       <div className="example-steps">
-        {plan.steps.map((step, index) => (
+        {plan.steps.map((step) => (
           <div className="example-step-group" key={step.title}>
             <div className={`example-step ${step.complete ? "done" : ""}`}>
               <span className="example-check">{step.complete && <Check size={12} />}</span>
               <div><strong>{step.title}</strong></div>
               <span className="example-time"><Timer size={13} /> {step.time}</span>
-              <span className="example-index">1-{index + 1}</span>
             </div>
             {step.children && (
               <div className="example-children">
-                {step.children.map((child, childIndex) => (
-                  <div key={child}><span />{child}<small>2-{childIndex + 1}</small></div>
+                {step.children.map((child) => (
+                  <div key={child}><span />{child}</div>
                 ))}
               </div>
             )}
@@ -92,9 +95,8 @@ export default async function Home() {
       <SiteHeader viewer={viewer?.isDemo ? null : viewer} />
       <section className="hero page-shell">
         <div className="hero-aura" aria-hidden="true"><span /><span /><span /></div>
-        <div className="hero-pill">AI planning, made practical</div>
         <h1>Turn any goal into<br />a plan you can <span>finish.</span></h1>
-        <p className="hero-copy">Clear steps, honest time estimates, and as much detail as you need.</p>
+        <p className="hero-copy">Practical AI planning with clear steps, honest time estimates, and as much detail as you need.</p>
         <GoalCapture showSuggestions />
       </section>
 
@@ -120,7 +122,12 @@ export default async function Home() {
           <GoalCapture />
         </div>
       </section>
-      <footer className="marketing-footer page-shell">© {new Date().getFullYear()} Goal Planner</footer>
+      <footer className="marketing-footer">
+        <div className="page-shell">
+          <span>© {new Date().getFullYear()} Goal Planner</span>
+          <nav aria-label="Legal"><Link href="/terms">Terms &amp; Conditions</Link><Link href="/privacy">Privacy Policy</Link></nav>
+        </div>
+      </footer>
     </main>
   );
 }

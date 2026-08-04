@@ -85,7 +85,15 @@ function StepCard({
           </button>
         </div>
         <div className="step-body">
-          <div className="step-title-row"><h3>{node.title}</h3><span className="step-index">{node.depth}-{index + 1}</span></div>
+          <div className="step-title-row">
+            <h3>{node.title}</h3>
+            <span className="step-index" aria-label={`Level ${node.depth}, step ${index + 1}`}>
+              <span className="step-depth-dots" aria-hidden="true">
+                {Array.from({ length: node.depth }, (_, dotIndex) => <i key={dotIndex} />)}
+              </span>
+              <span aria-hidden="true">{index + 1}</span>
+            </span>
+          </div>
           <p>{node.description}</p>
           <div className="step-actions">
             <span className="time-chip">{formatMinutes(node.estimatedMinutes)}</span>

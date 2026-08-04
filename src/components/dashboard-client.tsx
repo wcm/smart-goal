@@ -52,7 +52,7 @@ export function DashboardClient({ viewer }: { viewer: Viewer }) {
   return (
     <main className="dashboard page-shell app-shell">
       {viewer.isDemo && <div className="demo-banner"><Sparkles size={16} /> Demo mode — plans are saved only in this browser until Supabase is connected.</div>}
-      <section className="dashboard-heading"><h1>Plans</h1></section>
+      <section className="dashboard-heading"><h1>My plans</h1></section>
 
       <section className="quick-goal">
         <Sparkles size={19} aria-hidden="true" />

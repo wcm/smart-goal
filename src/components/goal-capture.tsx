@@ -35,24 +35,6 @@ export function GoalCapture({ showSuggestions = false }: { showSuggestions?: boo
 
   return (
     <div className="goal-capture">
-      <div className="goal-input-wrap">
-        <Sparkles size={19} aria-hidden="true" />
-        <input
-          ref={inputRef}
-          value={goal}
-          onChange={(event) => setGoal(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") submit();
-          }}
-          placeholder="I want to launch my first newsletter…"
-          aria-label="What is your goal?"
-          maxLength={1200}
-        />
-      </div>
-      <Button size="lg" onClick={submit} disabled={goal.trim().length < 3}>
-        How do I achieve it?
-        <ArrowRight size={18} />
-      </Button>
       {showSuggestions && (
         <div className="prompt-tickers" aria-label="Example goals">
           {promptRows.map((prompts, rowIndex) => (
@@ -75,6 +57,24 @@ export function GoalCapture({ showSuggestions = false }: { showSuggestions?: boo
           ))}
         </div>
       )}
+      <div className="goal-input-wrap">
+        <Sparkles size={19} aria-hidden="true" />
+        <input
+          ref={inputRef}
+          value={goal}
+          onChange={(event) => setGoal(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") submit();
+          }}
+          placeholder="I want to launch my first newsletter…"
+          aria-label="What is your goal?"
+          maxLength={1200}
+        />
+        <Button size="lg" onClick={submit} disabled={goal.trim().length < 3}>
+          How do I achieve it?
+          <ArrowRight size={18} />
+        </Button>
+      </div>
     </div>
   );
 }

@@ -11,14 +11,14 @@ test("creates, breaks down, completes, and persists a demo plan", async ({ page 
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Launch my first useful newsletter");
 
   await page.getByRole("button", { name: "Break it down" }).first().click();
-  await expect(page.getByText("2-1", { exact: true }).first()).toBeVisible();
+  await expect(page.getByLabel("Level 2, step 1").first()).toBeVisible();
 
   await page.getByRole("button", { name: /Mark complete: Define the finish line/ }).click();
   await expect(page.getByText(/%/).first()).not.toContainText("0%");
 
   await page.reload();
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Launch my first useful newsletter");
-  await expect(page.getByText("2-1", { exact: true }).first()).toBeVisible();
+  await expect(page.getByLabel("Level 2, step 1").first()).toBeVisible();
 });
 
 test("uses context questions before creating a plan", async ({ page }) => {
