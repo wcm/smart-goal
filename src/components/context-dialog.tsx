@@ -61,7 +61,7 @@ function ContextDialogContent({
           <div><span className="section-label">ADD CONTEXT</span><h2 id="context-title">{title}</h2></div>
           <button className="icon-button" onClick={onClose} disabled={busy} aria-label="Close dialog"><X size={19} /></button>
         </div>
-        <p className="dialog-intro">A little context helps GoalFlow make the next version more realistic for you. Skip anything that does not matter.</p>
+        <p className="dialog-intro">A little context helps Goal Planner make the next version more realistic for you. Skip anything that does not matter.</p>
         <div className="question-list">
           {questions.map((question, index) => (
             <label key={`${question.question}-${index}`}>

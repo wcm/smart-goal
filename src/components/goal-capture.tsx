@@ -34,7 +34,7 @@ export function GoalCapture() {
         How do I achieve it?
         <ArrowRight size={18} />
       </Button>
-      <p>No perfect prompt needed. Start broad; GoalFlow will help you clarify.</p>
+      <p>No perfect prompt needed. Start broad; Goal Planner will help you clarify.</p>
     </div>
   );
 }

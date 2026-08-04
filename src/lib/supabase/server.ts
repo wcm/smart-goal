@@ -34,7 +34,7 @@ export async function getViewer(): Promise<Viewer | null> {
     return {
       id: DEMO_USER_ID,
       name: "Demo planner",
-      email: "demo@goalflow.local",
+      email: "demo@goal-planner.local",
       avatarUrl: null,
       isDemo: true,
     };

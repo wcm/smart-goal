@@ -18,7 +18,7 @@ Build a goal-planning web application where users can:
 
 Unless changed before implementation, use these product decisions:
 
-- Working product name: **GoalFlow**
+- Product name: **Goal Planner**
 - Primary infrastructure region: Singapore or the closest available region
 - Visual direction: clean, calm, modern, and productivity-focused
 - Authentication: Google only

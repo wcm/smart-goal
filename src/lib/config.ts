@@ -11,7 +11,7 @@ export function hasSupabaseConfig() {
 
 export function isDemoAiEnabled() {
   return (
-    process.env.GOALFLOW_ENABLE_DEMO === "true" ||
+    process.env.GOAL_PLANNER_ENABLE_DEMO === "true" ||
     (process.env.NODE_ENV !== "production" && !process.env.OPENAI_API_KEY)
   );
 }

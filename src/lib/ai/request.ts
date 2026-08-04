@@ -16,7 +16,7 @@ export async function authorizeAiRequest() {
   const supabase = await createSupabaseServerClient();
   if (!supabase) {
     if (isDemoAiEnabled()) {
-      return { userId: "demo-user", safetyIdentifier: "goalflow-demo" };
+      return { userId: "demo-user", safetyIdentifier: "goal-planner-demo" };
     }
     throw new ApiRequestError(
       "Authentication is not configured. Connect Supabase before enabling live AI.",

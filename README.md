@@ -1,6 +1,6 @@
-# GoalFlow
+# Goal Planner
 
-GoalFlow turns an ambitious goal into a practical, time-estimated plan. Users can add context, regenerate a plan, recursively break down any step to ten levels, track time-weighted progress, and build a daily completion streak.
+Goal Planner turns an ambitious goal into a practical, time-estimated plan. Users can add context, regenerate a plan, recursively break down any step to ten levels, track time-weighted progress, and build a daily completion streak.
 
 The repository is intentionally usable before external accounts are connected. With no Supabase or OpenAI credentials, it runs as a deterministic browser-local demo with the complete planning flow.
 
@@ -26,7 +26,7 @@ The detailed product and architecture specification lives in [IMPLEMENTATION_PLA
 ## Stack
 
 - Next.js 16 App Router, React 19, and TypeScript
-- Tailwind CSS 4 with a custom GoalFlow design system
+- Tailwind CSS 4 with a custom Goal Planner design system
 - Supabase Postgres and Auth
 - OpenAI Responses API with `gpt-5.6-terra` by default
 - Vitest, Testing Library, and Playwright
@@ -51,7 +51,7 @@ Demo mode is visibly labeled. It should not be enabled on a public production de
 ```dotenv
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-5.6-terra
-GOALFLOW_ENABLE_DEMO=false
+GOAL_PLANNER_ENABLE_DEMO=false
 
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
@@ -98,7 +98,7 @@ Add a server-side API key to `.env.local`:
 ```dotenv
 OPENAI_API_KEY=your_key_here
 OPENAI_MODEL=gpt-5.6-terra
-GOALFLOW_ENABLE_DEMO=false
+GOAL_PLANNER_ENABLE_DEMO=false
 ```
 
 The integration uses:
@@ -116,7 +116,7 @@ The prompt and output contracts live in `src/lib/ai`.
 
 1. Import this GitHub repository into Vercel or run `pnpm dlx vercel@latest`.
 2. Add the five production environment variables from `.env.example`.
-3. Do not set `GOALFLOW_ENABLE_DEMO=true` for a public deployment.
+3. Do not set `GOAL_PLANNER_ENABLE_DEMO=true` for a public deployment.
 4. Deploy once to obtain the production URL.
 5. Add that URL to the Supabase redirect allowlist and Google authorized origins.
 6. Perform a Google login and live generation smoke test.

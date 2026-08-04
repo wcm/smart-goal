@@ -1,4 +1,4 @@
-project_id = "goalflow"
+project_id = "goal-planner"
 
 [api]
 enabled = true

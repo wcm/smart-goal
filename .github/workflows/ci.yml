@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      GOALFLOW_ENABLE_DEMO: "true"
+      GOAL_PLANNER_ENABLE_DEMO: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

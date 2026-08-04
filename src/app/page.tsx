@@ -26,7 +26,7 @@ export default async function Home() {
         <GoalCapture />
       </section>
 
-      <section className="product-preview page-shell" aria-label="GoalFlow product preview">
+      <section className="product-preview page-shell" aria-label="Goal Planner product preview">
         <div className="preview-glow" />
         <div className="preview-window">
           <div className="preview-sidebar">
@@ -68,7 +68,7 @@ export default async function Home() {
             <span className="feature-number">01</span>
             <div className="feature-icon"><GitBranch /></div>
             <h3>Start with the big picture</h3>
-            <p>Describe the outcome. GoalFlow turns it into a sequenced plan with realistic time estimates.</p>
+            <p>Describe the outcome. Goal Planner turns it into a sequenced plan with realistic time estimates.</p>
           </article>
           <article>
             <span className="feature-number">02</span>
@@ -93,7 +93,7 @@ export default async function Home() {
         </div>
       </section>
       <footer className="marketing-footer page-shell">
-        <span>© {new Date().getFullYear()} GoalFlow</span>
+        <span>© {new Date().getFullYear()} Goal Planner</span>
         <span>Built for thoughtful progress.</span>
       </footer>
     </main>

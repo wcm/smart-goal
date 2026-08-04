@@ -9,7 +9,7 @@ import type {
   StepRecord,
 } from "@/lib/planner/types";
 
-const STORAGE_KEY = "goalflow-demo-data-v1";
+const STORAGE_KEY = "goal-planner-demo-data-v1";
 
 type DemoData = { plans: PlanRecord[]; events: ActivityEvent[] };
 
