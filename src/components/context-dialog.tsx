@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ContextQuestionForm } from "@/components/context-question-form";
 import type { GeneratedQuestion } from "@/lib/planner/types";
 
 export function ContextDialog({
@@ -10,6 +9,8 @@ export function ContextDialog({
   subject,
   questions,
   busy,
+  submitLabel = "Update the plan",
+  busyLabel = "Updating…",
   onClose,
   onSubmit,
 }: {
@@ -17,6 +18,8 @@ export function ContextDialog({
   subject: string;
   questions: GeneratedQuestion[];
   busy: boolean;
+  submitLabel?: string;
+  busyLabel?: string;
   onClose: () => void;
   onSubmit: (answers: { question: string; answer: string }[]) => void;
 }) {
@@ -28,6 +31,8 @@ export function ContextDialog({
       subject={subject}
       questions={questions}
       busy={busy}
+      submitLabel={submitLabel}
+      busyLabel={busyLabel}
       onClose={onClose}
       onSubmit={onSubmit}
     />
@@ -38,19 +43,19 @@ function ContextDialogContent({
   subject,
   questions,
   busy,
+  submitLabel,
+  busyLabel,
   onClose,
   onSubmit,
 }: {
   subject: string;
   questions: GeneratedQuestion[];
   busy: boolean;
+  submitLabel: string;
+  busyLabel: string;
   onClose: () => void;
   onSubmit: (answers: { question: string; answer: string }[]) => void;
 }) {
-  const [answers, setAnswers] = useState<string[]>(() =>
-    questions.map(() => ""),
-  );
-
   return (
     <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => {
       if (event.currentTarget === event.target && !busy) onClose();
@@ -61,30 +66,14 @@ function ContextDialogContent({
           <button className="icon-button" onClick={onClose} disabled={busy} aria-label="Close dialog"><X size={19} /></button>
         </div>
         <p className="context-subject">{subject}</p>
-        <div className="question-list">
-          {questions.map((question, index) => (
-            <label key={`${question.question}-${index}`}>
-              <span><strong>{index + 1}</strong> {question.question}</span>
-              <textarea
-                value={answers[index] ?? ""}
-                onChange={(event) => setAnswers((current) => current.map((answer, answerIndex) => answerIndex === index ? event.target.value : answer))}
-                placeholder="Your answer…"
-                maxLength={2000}
-                rows={3}
-                autoFocus={index === 0}
-              />
-            </label>
-          ))}
-        </div>
-        <div className="dialog-actions">
-          <Button variant="ghost" onClick={onClose} disabled={busy}>Cancel</Button>
-          <Button
-            onClick={() => onSubmit(questions.map((question, index) => ({ question: question.question, answer: answers[index]?.trim() || "No preference provided." })))}
-            disabled={busy || answers.every((answer) => !answer.trim())}
-          >
-            {busy ? "Updating…" : "Update the plan"}
-          </Button>
-        </div>
+        <ContextQuestionForm
+          questions={questions}
+          busy={busy}
+          submitLabel={submitLabel}
+          busyLabel={busyLabel}
+          onCancel={onClose}
+          onSubmit={onSubmit}
+        />
       </section>
     </div>
   );

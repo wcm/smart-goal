@@ -10,6 +10,7 @@ The repository is intentionally usable before external accounts are connected. W
 - Deterministic development AI plus a live OpenAI Responses API provider.
 - Structured Outputs validated with Zod.
 - Whole-plan and step-level clarification questions.
+- AI-selected plan emojis with an editable emoji picker.
 - Recursive breakdown to ten levels.
 - Child estimates normalized to equal the parent time exactly.
 - Bidirectional completion propagation.
@@ -18,7 +19,9 @@ The repository is intentionally usable before external accounts are connected. W
 - Multiple private plans, archive, restore, and delete controls.
 - GitHub-style 365-day activity grid with current and longest streaks.
 - Supabase Google OAuth integration and cookie-based SSR sessions.
-- Postgres migrations, Row Level Security, atomic daily quotas, tree validation, and transactional completion updates.
+- Anonymous planning with browser-session plans, eight lifetime AI actions, and three breakdown levels before sign-in.
+- One Google sign-in flow that imports the current temporary plan into either a new or returning account.
+- Postgres migrations, Row Level Security, server-selected guest/daily quotas, tree validation, and transactional completion updates.
 - Unit tests, browser tests, production build verification, and GitHub Actions CI.
 
 The detailed product and architecture specification lives in [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md).
@@ -56,9 +59,13 @@ GOAL_PLANNER_ENABLE_DEMO=false
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+LEGAL_CONTACT_EMAIL=contact@goal-planner.com
 ```
 
 `OPENAI_API_KEY` is read only in server route handlers. The application does not need a Supabase service-role key at runtime.
+
+`LEGAL_CONTACT_EMAIL` is not a secret. It is displayed as the contact link on the Terms and Privacy pages and defaults to `contact@goal-planner.com`.
 
 ## Connect Supabase
 
@@ -72,9 +79,12 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
    ```
 
 3. Copy the Project URL and publishable key from the Supabase Connect dialog into `.env.local`.
-4. Restart the development server.
+4. In Authentication settings, enable Anonymous Sign-Ins.
+5. Restart the development server.
 
-The initial migration creates all tables, indexes, constraints, RLS policies, profile trigger, quota function, and completion transaction.
+The migrations create all tables, indexes, constraints, RLS policies, profile trigger, registered and guest quota functions, guest depth limits, anonymous-plan storage protection, anonymous-user cleanup helper, and completion transaction.
+
+Before a public launch, configure Cloudflare Turnstile or hCaptcha in Supabase Authentication → Bot and Abuse Protection. Anonymous sign-in has a built-in IP rate limit, but CAPTCHA provides important protection against distributed account creation and AI quota abuse.
 
 ### Configure Google login
 
@@ -88,6 +98,7 @@ The initial migration creates all tables, indexes, constraints, RLS policies, pr
 
 4. In Supabase Authentication → Providers → Google, enable the provider and add the Google Client ID and Client Secret.
 5. In Supabase Authentication → URL Configuration, set the Site URL and allow the app's `/auth/callback` URL.
+6. Test the guest “Sign in” flow with both a new Google account and a returning account.
 
 For production, repeat the origin and redirect allowlist setup with the final Vercel URL or custom domain.
 
@@ -108,7 +119,7 @@ The integration uses:
 - low reasoning effort
 - `store: false`
 - a privacy-preserving hashed `safety_identifier`
-- authenticated per-user daily quota enforcement
+- server-selected guest lifetime and registered daily quota enforcement
 
 The prompt and output contracts live in `src/lib/ai`.
 
@@ -149,6 +160,9 @@ pnpm exec playwright install chromium
 - Regeneration archives the replaced active subtree and creates a new generation.
 - Streaks count user-initiated completions, not automatic ancestor or descendant changes.
 - Plans are private and protected by `auth.uid()` RLS policies.
+- Anonymous plans live only in the current tab's browser session and are cleared on returning home. Guests can start another plan without a plan-count cap, while the anonymous account retains its eight lifetime AI-action limit and three-level breakdown limit.
+- Signing in copies the current temporary plan into the Google account selected by Supabase, then clears the browser handoff copy.
+- Schedule `select public.delete_expired_anonymous_users();` weekly in Supabase Cron to remove abandoned anonymous accounts older than 30 days.
 
 ## Current credential boundary
 

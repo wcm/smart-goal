@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Archive, ArrowUpRight, MoreHorizontal, Sparkles, Trash2 } from "lucide-react";
+import { Archive, ArrowUpRight, CloudOff, MoreHorizontal, Sparkles, Trash2 } from "lucide-react";
 import { ActivityGrid } from "@/components/activity-grid";
+import { GoalInputIcon } from "@/components/goal-input-icon";
+import { GuestUpgradeButton } from "@/components/guest-upgrade-button";
+import { PlanEmojiPicker } from "@/components/plan-emoji-picker";
 import { Button } from "@/components/ui/button";
-import { archivePlan, deletePlan, getActivity, listPlans } from "@/lib/planner/repository";
+import { archivePlan, deletePlan, getActivity, listPlans, savePlan } from "@/lib/planner/repository";
 import { calculatePlanProgress, formatMinutes } from "@/lib/planner/tree";
 import type { ActivityEvent, PlanRecord, Viewer } from "@/lib/planner/types";
 import { asErrorMessage } from "@/lib/utils";
@@ -30,14 +33,15 @@ export function DashboardClient({ viewer }: { viewer: Viewer }) {
         .update({ timezone, updated_at: new Date().toISOString() })
         .eq("id", viewer.id);
     }
-    Promise.all([listPlans(viewer.id), getActivity(viewer.id)])
+    const repositoryOptions = { temporary: viewer.isGuest };
+    Promise.all([listPlans(viewer.id, repositoryOptions), getActivity(viewer.id, repositoryOptions)])
       .then(([loadedPlans, events]) => {
         setPlans(loadedPlans);
         setActivity(events);
       })
       .catch((reason) => setError(asErrorMessage(reason)))
       .finally(() => setLoading(false));
-  }, [viewer.id, viewer.isDemo]);
+  }, [viewer.id, viewer.isDemo, viewer.isGuest]);
 
   const visiblePlans = useMemo(
     () => plans.filter((plan) => plan.status === (showArchived ? "archived" : "active")),
@@ -49,19 +53,38 @@ export function DashboardClient({ viewer }: { viewer: Viewer }) {
     router.push(`/plans/new?goal=${encodeURIComponent(goal.trim())}`);
   }
 
+  async function changePlanEmoji(plan: PlanRecord, emoji: string) {
+    if (emoji === plan.emoji) return;
+    const updated = { ...plan, emoji, updatedAt: new Date().toISOString() };
+    setPlans((current) => current.map((item) => item.id === plan.id ? updated : item));
+    setError("");
+    try {
+      await savePlan(updated, { temporary: viewer.isGuest });
+    } catch (reason) {
+      setPlans((current) => current.map((item) => item.id === plan.id ? plan : item));
+      setError(asErrorMessage(reason));
+    }
+  }
+
   return (
-    <main className="dashboard page-shell app-shell">
+    <main className={`dashboard page-shell app-shell ${viewer.isGuest && plans[0] ? "has-guest-banner" : ""}`}>
       {viewer.isDemo && <div className="demo-banner"><Sparkles size={16} /> Demo mode — plans are saved only in this browser until Supabase is connected.</div>}
-      <section className="dashboard-heading"><h1>My plans</h1></section>
+      {viewer.isGuest && plans[0] && (
+        <div className="guest-plan-banner dashboard-guest-banner">
+          <div><CloudOff size={18} /><span><strong>Don’t lose your progress</strong><small>Sign in to save this plan and continue next time.</small></span></div>
+          <GuestUpgradeButton label="Save this plan" />
+        </div>
+      )}
+      <section className="dashboard-heading"><h1>{viewer.isGuest ? "My plan" : "My plans"}</h1></section>
 
       <section className="quick-goal">
-        <Sparkles size={19} aria-hidden="true" />
+        <span className="goal-field-mark"><GoalInputIcon /></span>
         <input value={goal} onChange={(event) => setGoal(event.target.value)} onKeyDown={(event) => event.key === "Enter" && startGoal()} placeholder="Start a new plan…" aria-label="Start a new plan" />
         <Button onClick={startGoal} disabled={goal.trim().length < 3} aria-label="Create plan"><ArrowUpRight size={18} /></Button>
       </section>
 
       <section className="plans-section">
-        <div className="section-row"><h2>{showArchived ? "Archived" : "In progress"}</h2><div className="plan-tabs"><button className={!showArchived ? "active" : ""} onClick={() => setShowArchived(false)}>Active</button><button className={showArchived ? "active" : ""} onClick={() => setShowArchived(true)}>Archived</button></div></div>
+        <div className="section-row"><h2>{showArchived ? "Archived" : "In progress"}</h2>{!viewer.isGuest && <div className="plan-tabs"><button className={!showArchived ? "active" : ""} onClick={() => setShowArchived(false)}>Active</button><button className={showArchived ? "active" : ""} onClick={() => setShowArchived(true)}>Archived</button></div>}</div>
         {error && <div className="error-card" role="alert">{error}</div>}
         {loading ? (
           <div className="plan-grid"><div className="plan-card skeleton" /><div className="plan-card skeleton" /></div>
@@ -73,7 +96,13 @@ export function DashboardClient({ viewer }: { viewer: Viewer }) {
               const progress = calculatePlanProgress(plan);
               return (
                 <article className="plan-card" key={plan.id}>
-                  <div className="plan-card-top"><span className="plan-date">Updated {new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(plan.updatedAt))}</span><div className="card-menu-wrap"><button className="icon-button" onClick={() => setOpenMenu(openMenu === plan.id ? null : plan.id)} aria-label="Plan actions"><MoreHorizontal size={19} /></button>{openMenu === plan.id && <div className="card-menu"><button onClick={async () => { const updated = await archivePlan(plan); setPlans((current) => current.map((item) => item.id === updated.id ? updated : item)); setOpenMenu(null); }}><Archive size={15} />{plan.status === "active" ? "Archive" : "Restore"}</button><button className="danger" onClick={async () => { if (!window.confirm("Delete this plan permanently?")) return; await deletePlan(plan.id); setPlans((current) => current.filter((item) => item.id !== plan.id)); }}><Trash2 size={15} />Delete</button></div>}</div></div>
+                  <div className="plan-card-top">
+                    <PlanEmojiPicker value={plan.emoji} onChange={(emoji) => void changePlanEmoji(plan, emoji)} />
+                    <div className="plan-card-meta">
+                      <span className="plan-date">Updated {new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(plan.updatedAt))}</span>
+                      <div className="card-menu-wrap"><button className="icon-button" onClick={() => setOpenMenu(openMenu === plan.id ? null : plan.id)} aria-label="Plan actions"><MoreHorizontal size={19} /></button>{openMenu === plan.id && <div className="card-menu">{!viewer.isGuest && <button onClick={async () => { const updated = await archivePlan(plan); setPlans((current) => current.map((item) => item.id === updated.id ? updated : item)); setOpenMenu(null); }}><Archive size={15} />{plan.status === "active" ? "Archive" : "Restore"}</button>}<button className="danger" onClick={async () => { if (!window.confirm("Delete this plan permanently?")) return; await deletePlan(plan.id, { temporary: viewer.isGuest }); setPlans((current) => current.filter((item) => item.id !== plan.id)); }}><Trash2 size={15} />Delete</button></div>}</div>
+                    </div>
+                  </div>
                   <Link href={`/plans/${plan.id}`} className="plan-card-link">
                     <h3>{plan.title}</h3><p>{plan.summary}</p>
                     <div className="plan-card-progress"><div><span>{progress.percentage}%</span><span>{formatMinutes(progress.totalMinutes)}</span></div><div className="progress-track"><span style={{ width: `${progress.percentage}%` }} /></div></div>
@@ -84,7 +113,7 @@ export function DashboardClient({ viewer }: { viewer: Viewer }) {
           </div>
         )}
       </section>
-      <ActivityGrid events={activity} />
+      {!viewer.isGuest && <ActivityGrid events={activity} />}
     </main>
   );
 }

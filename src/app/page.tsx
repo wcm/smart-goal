@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowDown, Check, GitBranch, RefreshCw, Timer } from "lucide-react";
 import { GoalCapture } from "@/components/goal-capture";
+import { ClearTemporaryPlan } from "@/components/clear-temporary-plan";
 import { SiteHeader } from "@/components/site-header";
 import { getViewer } from "@/lib/supabase/server";
 
@@ -60,9 +61,9 @@ function ExamplePlan({ plan }: { plan: (typeof examplePlans)[number] }) {
     <article className={`example-plan tone-${plan.tone}`}>
       <div className="example-plan-head">
         <span className="example-emoji" aria-hidden="true">{plan.emoji}</span>
-        <span>{plan.progress}%</span>
       </div>
       <h3>{plan.title}</h3>
+      <footer><span>{plan.total} total</span><span>{plan.steps.length + 2} steps</span></footer>
       <div className="example-progress"><span style={{ width: `${plan.progress}%` }} /></div>
       <div className="example-steps">
         {plan.steps.map((step) => (
@@ -82,17 +83,17 @@ function ExamplePlan({ plan }: { plan: (typeof examplePlans)[number] }) {
           </div>
         ))}
       </div>
-      <footer><span>{plan.total} total</span><span>{plan.steps.length + 2} steps</span></footer>
     </article>
   );
 }
 
-export default async function Home() {
-  const viewer = await getViewer();
+export default async function Home({ searchParams }: { searchParams: Promise<{ signin?: string }> }) {
+  const [viewer, params] = await Promise.all([getViewer(), searchParams]);
 
   return (
     <main className="marketing-page">
-      <SiteHeader viewer={viewer?.isDemo ? null : viewer} />
+      <ClearTemporaryPlan />
+      <SiteHeader viewer={viewer?.isDemo ? null : viewer} autoOpenGuestSignIn={params.signin === "usage"} />
       <section className="hero page-shell">
         <div className="hero-aura" aria-hidden="true"><span /><span /><span /></div>
         <h1>Turn any goal into<br />a plan you can <span>finish.</span></h1>

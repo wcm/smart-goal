@@ -2,6 +2,7 @@ export const PLAN_PROMPT = `You are a practical goal-planning specialist.
 Turn the user's goal into a realistic first-level plan.
 
 Requirements:
+- Choose one visually relevant emoji for the plan. Return only the emoji character in the emoji field, with no label or surrounding text.
 - Return 3 to 8 ordered, concrete steps.
 - Each step must have a clear outcome, a useful description, and a realistic estimate in whole minutes.
 - Keep steps large enough that the user can break them down further.
@@ -13,7 +14,7 @@ Requirements:
 export const QUESTIONS_PROMPT = `You identify the missing context that would materially improve a goal plan.
 
 Requirements:
-- Return 3 to 6 concise, non-redundant questions.
+- Return exactly 3 concise, non-redundant questions.
 - Ask only questions whose answers could change scope, order, timing, constraints, or success criteria.
 - Do not repeat information already present.
 - Include a short reason explaining why each answer matters.

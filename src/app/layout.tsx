@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Manrope } from "next/font/google";
+import { Geist, Instrument_Sans } from "next/font/google";
 import "./globals.css";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -9,8 +9,8 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const instrumentSans = Instrument_Sans({
+  variable: "--font-instrument-sans",
   subsets: ["latin"],
 });
 
@@ -56,7 +56,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${manrope.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${instrumentSans.variable} h-full antialiased`}
     >
       <body>
         {children}

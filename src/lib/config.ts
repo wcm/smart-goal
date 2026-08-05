@@ -1,4 +1,6 @@
-export const AI_DAILY_LIMIT = 20;
+export const AI_DAILY_LIMIT = 200;
+export const GUEST_AI_LIFETIME_LIMIT = 8;
+export const GUEST_MAX_STEP_DEPTH = 3;
 export const MAX_STEP_DEPTH = 10;
 export const DEMO_USER_ID = "00000000-0000-4000-8000-000000000001";
 

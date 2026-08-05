@@ -6,9 +6,11 @@ export const metadata = { title: "New plan" };
 
 export default async function NewPlanPage({ searchParams }: { searchParams: Promise<{ goal?: string }> }) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
+  const goal = params.goal?.trim().slice(0, 1200) ?? "";
   if (!viewer) {
-    const next = `/plans/new${params.goal ? `?goal=${encodeURIComponent(params.goal)}` : ""}`;
+    const next = `/plans/new${goal ? `?goal=${encodeURIComponent(goal)}` : ""}`;
     redirect(`/login?next=${encodeURIComponent(next)}`);
   }
-  return <NewPlanClient viewer={viewer} initialGoal={params.goal?.slice(0, 1200) ?? ""} />;
+  if (goal.length < 3) redirect("/plans");
+  return <NewPlanClient viewer={viewer} initialGoal={goal} />;
 }

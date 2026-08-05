@@ -3,17 +3,21 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowLeft,
-  CheckCircle2,
   Clock3,
+  CloudOff,
   Lightbulb,
   LoaderCircle,
   Sparkles,
 } from "lucide-react";
 import { ContextDialog } from "@/components/context-dialog";
+import { GuestUpgradeButton } from "@/components/guest-upgrade-button";
 import { StepTree } from "@/components/step-tree";
 import { Button } from "@/components/ui/button";
-import { postAi } from "@/lib/ai/client";
+import { PageBackLink } from "@/components/page-back-link";
+import { PlanEmojiPicker } from "@/components/plan-emoji-picker";
+import { AiClientError, postAi } from "@/lib/ai/client";
+import { GUEST_MAX_STEP_DEPTH } from "@/lib/config";
+import { clearGuestPlanSnapshot } from "@/lib/planner/guest-transfer";
 import {
   getPlan,
   savePlan,
@@ -41,6 +45,7 @@ import type {
 import { asErrorMessage, createId } from "@/lib/utils";
 
 type ContextTarget = { step: StepRecord | null; questions: GeneratedQuestion[] };
+type UpgradeReason = "save" | "depth" | "usage";
 
 function ancestorPath(plan: PlanRecord, step: StepRecord) {
   const path = [step.title];
@@ -58,23 +63,44 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
   const [plan, setPlan] = useState<PlanRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [busyTarget, setBusyTarget] = useState<string | null>(null);
   const [contextTarget, setContextTarget] = useState<ContextTarget | null>(null);
   const [contextBusy, setContextBusy] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<UpgradeReason | null>(null);
 
   useEffect(() => {
-    getPlan(planId, viewer.id)
+    getPlan(planId, viewer.id, { temporary: viewer.isGuest })
       .then(setPlan)
       .catch((reason) => setError(asErrorMessage(reason)))
       .finally(() => setLoading(false));
-  }, [planId, viewer.id]);
+  }, [planId, viewer.id, viewer.isGuest]);
+
+  useEffect(() => {
+    if (!viewer.isGuest && !viewer.isDemo) clearGuestPlanSnapshot();
+  }, [viewer.isDemo, viewer.isGuest]);
 
   const progress = useMemo(
     () => (plan ? calculatePlanProgress(plan) : null),
     [plan],
   );
   const tree = useMemo(() => (plan ? buildStepTree(plan) : []), [plan]);
+  const contextStepHasChildren = Boolean(
+    plan && contextTarget?.step && getActiveSteps(plan).some((step) => step.parentId === contextTarget.step?.id),
+  );
+
+  function handlePlanningError(reason: unknown) {
+    if (reason instanceof AiClientError) {
+      if (reason.code === "GUEST_DEPTH_LIMIT_REACHED") {
+        setUpgradeReason("depth");
+        return;
+      }
+      if (reason.code === "GUEST_AI_LIMIT_REACHED") {
+        setUpgradeReason("usage");
+        return;
+      }
+    }
+    setError(asErrorMessage(reason));
+  }
 
   async function toggle(step: StepRecord, completed: boolean) {
     if (!plan) return;
@@ -82,7 +108,21 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
     setPlan(setStepCompletion(plan, step.id, completed));
     setError("");
     try {
-      setPlan(await toggleStepCompletion(previous, step.id, completed));
+      setPlan(await toggleStepCompletion(previous, step.id, completed, { temporary: viewer.isGuest }));
+    } catch (reason) {
+      setPlan(previous);
+      setError(asErrorMessage(reason));
+    }
+  }
+
+  async function changePlanEmoji(emoji: string) {
+    if (!plan || emoji === plan.emoji) return;
+    const previous = plan;
+    const updated = { ...plan, emoji, updatedAt: new Date().toISOString() };
+    setPlan(updated);
+    setError("");
+    try {
+      await savePlan(updated, { temporary: viewer.isGuest });
     } catch (reason) {
       setPlan(previous);
       setError(asErrorMessage(reason));
@@ -107,7 +147,12 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
     context: { question: string; answer: string }[] = [],
     questionMetadata: GeneratedQuestion[] = [],
   ) {
-    if (!plan || !confirmReplacement(step)) return;
+    if (!plan) return;
+    if (viewer.isGuest && step.depth >= GUEST_MAX_STEP_DEPTH) {
+      setUpgradeReason("depth");
+      return;
+    }
+    if (!confirmReplacement(step)) return;
     setBusyTarget(step.id);
     setContextBusy(context.length > 0);
     setError("");
@@ -144,12 +189,11 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
         createdAt: now,
       }));
       updated = { ...updated, contexts: updated.contexts.concat(newContexts) };
-      await savePlan(updated);
+      await savePlan(updated, { temporary: viewer.isGuest });
       setPlan(updated);
-      setNotice(`“${step.title}” now has a clearer next level.`);
       setContextTarget(null);
     } catch (reason) {
-      setError(asErrorMessage(reason));
+      handlePlanningError(reason);
     } finally {
       setBusyTarget(null);
       setContextBusy(false);
@@ -158,6 +202,10 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
 
   async function askForContext(step: StepRecord | null) {
     if (!plan) return;
+    if (viewer.isGuest && step && step.depth >= GUEST_MAX_STEP_DEPTH) {
+      setUpgradeReason("depth");
+      return;
+    }
     setBusyTarget(step?.id ?? "plan-context");
     setError("");
     try {
@@ -174,7 +222,7 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
       });
       setContextTarget({ step, questions: output.questions });
     } catch (reason) {
-      setError(asErrorMessage(reason));
+      handlePlanningError(reason);
     } finally {
       setBusyTarget(null);
     }
@@ -221,12 +269,11 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
           })),
         ),
       };
-      await savePlan(updated);
+      await savePlan(updated, { temporary: viewer.isGuest });
       setPlan(updated);
-      setNotice("Your plan has been updated with the new context.");
       setContextTarget(null);
     } catch (reason) {
-      setError(asErrorMessage(reason));
+      handlePlanningError(reason);
     } finally {
       setContextBusy(false);
       setBusyTarget(null);
@@ -241,27 +288,46 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
   }
 
   return (
-    <main className="planner page-shell app-shell">
-      <div className="planner-breadcrumb"><Link href="/plans"><ArrowLeft size={16} /> All plans</Link></div>
+    <main className={`planner page-shell app-shell ${viewer.isGuest ? "has-guest-banner" : ""}`}>
+      <div className="page-back-row"><PageBackLink href={viewer.isGuest ? "/" : "/plans"}>{viewer.isGuest ? "Home" : "All plans"}</PageBackLink></div>
       {viewer.isDemo && <div className="demo-banner"><Sparkles size={16} /> Demo mode — AI responses are deterministic and this plan lives only in this browser.</div>}
+      {viewer.isGuest && (
+        <div className="guest-plan-banner">
+          <div>
+            <CloudOff size={18} />
+            <span><strong>Don’t lose your progress</strong><small>Sign in to save this plan and continue next time.</small></span>
+          </div>
+          <GuestUpgradeButton
+            label="Save this plan"
+            reason={upgradeReason ?? "save"}
+            open={Boolean(upgradeReason)}
+            onOpenChange={(open) => setUpgradeReason(open ? upgradeReason ?? "save" : null)}
+          />
+        </div>
+      )}
       {error && <div className="error-card floating-message" role="alert">{error}<button onClick={() => setError("")}>×</button></div>}
-      {notice && <div className="success-card floating-message"><CheckCircle2 size={17} />{notice}<button onClick={() => setNotice("")}>×</button></div>}
 
       <section className="planner-hero">
         <div className="planner-title"><h1>{plan.title}</h1><p>{plan.summary}</p></div>
-        <Button variant="secondary" onClick={() => askForContext(null)} disabled={Boolean(busyTarget)}>{busyTarget === "plan-context" ? <LoaderCircle className="spin" size={17} /> : <Lightbulb size={17} />} Add context</Button>
       </section>
 
       <section className="plan-overview">
+        <PlanEmojiPicker value={plan.emoji} size="lg" onChange={(emoji) => void changePlanEmoji(emoji)} />
         <div className="overview-progress"><div><strong>{progress?.percentage ?? 0}%</strong><span>{progress?.completedMinutes ?? 0} / {progress?.totalMinutes ?? 0} min</span></div><div className="progress-track"><span style={{ width: `${progress?.percentage ?? 0}%` }} /></div></div>
         <div className="overview-time"><Clock3 size={18} /><span><small>Total time</small><strong>{formatMinutes(progress?.totalMinutes ?? 0)}</strong></span></div>
       </section>
 
-      {plan.assumptions.length > 0 && <details className="assumptions"><summary>Planning assumptions</summary><ul>{plan.assumptions.map((assumption) => <li key={assumption}>{assumption}</li>)}</ul></details>}
+      <details className="assumptions">
+        <summary>Planning assumptions</summary>
+        {plan.assumptions.length > 0 && <ul>{plan.assumptions.map((assumption) => <li key={assumption}>{assumption}</li>)}</ul>}
+        <div className="assumptions-actions">
+          <Button variant="secondary" onClick={() => askForContext(null)} disabled={Boolean(busyTarget)}>{busyTarget === "plan-context" ? <LoaderCircle className="spin" size={17} /> : <Lightbulb size={17} />} Add context</Button>
+        </div>
+      </details>
 
       <section className="plan-steps-section">
         <div className="steps-heading"><h2>Steps</h2></div>
-        <StepTree nodes={tree} busyTarget={busyTarget} onToggle={toggle} onBreakdown={(step) => breakDown(step)} onAddContext={askForContext} />
+        <StepTree nodes={tree} busyTarget={busyTarget} onToggle={toggle} onBreakdown={(step) => breakDown(step)} onAddContext={askForContext} isGuest={viewer.isGuest} />
       </section>
 
       <ContextDialog
@@ -269,6 +335,8 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
         subject={contextTarget?.step?.title ?? plan.title}
         questions={contextTarget?.questions ?? []}
         busy={contextBusy}
+        submitLabel={contextTarget?.step ? contextStepHasChildren ? "Regenerate" : "Break it down" : "Update the plan"}
+        busyLabel={contextTarget?.step ? contextStepHasChildren ? "Regenerating…" : "Breaking it down…" : "Updating…"}
         onClose={() => setContextTarget(null)}
         onSubmit={(answers) => {
           if (!contextTarget) return;

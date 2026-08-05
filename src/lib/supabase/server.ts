@@ -37,6 +37,7 @@ export async function getViewer(): Promise<Viewer | null> {
       email: "demo@goal-planner.local",
       avatarUrl: null,
       isDemo: true,
+      isGuest: false,
     };
   }
 
@@ -47,13 +48,15 @@ export async function getViewer(): Promise<Viewer | null> {
 
   return {
     id: user.id,
-    name:
-      user.user_metadata.full_name ||
-      user.user_metadata.name ||
-      user.email?.split("@")[0] ||
-      "Planner",
+    name: user.is_anonymous
+      ? "Guest planner"
+      : user.user_metadata.full_name ||
+        user.user_metadata.name ||
+        user.email?.split("@")[0] ||
+        "Planner",
     email: user.email || "",
     avatarUrl: user.user_metadata.avatar_url || null,
     isDemo: false,
+    isGuest: Boolean(user.is_anonymous),
   };
 }

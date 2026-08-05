@@ -7,6 +7,7 @@ export const GeneratedStepSchema = z.object({
 });
 
 export const GeneratedPlanSchema = z.object({
+  emoji: z.string().min(1).max(16),
   title: z.string(),
   summary: z.string(),
   assumptions: z.array(z.string()),
@@ -21,8 +22,7 @@ export const GeneratedQuestionsSchema = z.object({
         reason: z.string(),
       }),
     )
-    .min(3)
-    .max(6),
+    .length(3),
 });
 
 export const GeneratedBreakdownSchema = z.object({

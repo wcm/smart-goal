@@ -38,6 +38,18 @@ function contextText(context: ContextInput[]) {
     .join("\n\n");
 }
 
+function emojiFromGoal(goal: string) {
+  const normalized = goal.toLowerCase();
+  if (/run|marathon|fitness|workout|exercise/.test(normalized)) return "🏃";
+  if (/newsletter|email|audience/.test(normalized)) return "💌";
+  if (/learn|study|course|school|language/.test(normalized)) return "📚";
+  if (/travel|trip|sabbatical|vacation/.test(normalized)) return "✈️";
+  if (/save|money|finance|deposit|income/.test(normalized)) return "💰";
+  if (/write|book|novel|journal/.test(normalized)) return "✍️";
+  if (/build|launch|business|product|project/.test(normalized)) return "🚀";
+  return "🎯";
+}
+
 class DemoAiProvider {
   async generatePlan(goal: string, context: ContextInput[]) {
     const subject = titleFromGoal(goal);
@@ -45,6 +57,7 @@ class DemoAiProvider {
       ? "The plan reflects the constraints and preferences you added."
       : "You can add context to make the timing and sequence more personal.";
     return {
+      emoji: emojiFromGoal(goal),
       title: subject,
       summary: `A practical path from a clear definition of ${subject.toLowerCase()} through execution, review, and a sustainable finish. ${contextNote}`,
       assumptions: [
@@ -125,7 +138,7 @@ class DemoAiProvider {
           ),
       );
     return {
-      questions: (fresh.length >= 3 ? fresh : candidates).slice(0, 4),
+      questions: (fresh.length >= 3 ? fresh : candidates).slice(0, 3),
     };
   }
 

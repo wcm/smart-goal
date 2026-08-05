@@ -4,12 +4,14 @@ import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { GuestUpgradeButton } from "@/components/guest-upgrade-button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Viewer } from "@/lib/planner/types";
 
-export function AuthControls({ viewer }: { viewer: Viewer | null }) {
+export function AuthControls({ viewer, autoOpenGuestSignIn = false }: { viewer: Viewer | null; autoOpenGuestSignIn?: boolean }) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,9 +32,25 @@ export function AuthControls({ viewer }: { viewer: Viewer | null }) {
 
   if (!viewer) {
     return (
-      <Link href="/login" className="button button-secondary button-sm">
-        Sign in
-      </Link>
+      <div className="auth-controls">
+        <Link href="/tips" className="button button-ghost button-sm nav-tab">
+          Tips
+        </Link>
+        <Link href="/login" className="button button-secondary button-sm nav-sign-in">
+          Sign in
+        </Link>
+      </div>
+    );
+  }
+
+  if (viewer.isGuest) {
+    return (
+      <div className="auth-controls guest-auth-controls">
+        <Link href="/tips" className="button button-ghost button-sm nav-tab">
+          Tips
+        </Link>
+        <GuestUpgradeButton label="Sign in" variant="secondary" size="sm" className="nav-sign-in" autoOpen={autoOpenGuestSignIn} />
+      </div>
     );
   }
 
@@ -42,10 +60,14 @@ export function AuthControls({ viewer }: { viewer: Viewer | null }) {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("") || "GP";
+  const showAvatarImage = Boolean(viewer.avatarUrl && viewer.avatarUrl !== failedAvatarUrl);
 
   return (
     <div className="auth-controls">
-      <Link href="/plans" className="button button-ghost button-sm">
+      <Link href="/tips" className="button button-ghost button-sm nav-tab">
+        Tips
+      </Link>
+      <Link href="/plans" className="button button-ghost button-sm nav-tab">
         My plans
       </Link>
       <div className="account-menu-wrap" ref={menuRef}>
@@ -58,11 +80,14 @@ export function AuthControls({ viewer }: { viewer: Viewer | null }) {
           onClick={() => setMenuOpen((open) => !open)}
         >
           <span
-            className={`avatar ${viewer.avatarUrl ? "has-image" : ""}`}
-            style={viewer.avatarUrl ? { backgroundImage: `url(${viewer.avatarUrl})` } : undefined}
+            className={`avatar ${showAvatarImage ? "has-image" : ""}`}
             aria-hidden="true"
           >
-            {!viewer.avatarUrl && initials}
+            {showAvatarImage ? (
+              // A native image avoids remote-host configuration for Google profile URLs.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={viewer.avatarUrl!} alt="" referrerPolicy="no-referrer" onError={() => setFailedAvatarUrl(viewer.avatarUrl)} />
+            ) : initials}
           </span>
         </button>
         {menuOpen && (

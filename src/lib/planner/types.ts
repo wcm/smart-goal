@@ -33,6 +33,7 @@ export type PlanRecord = {
   id: string;
   userId: string;
   goal: string;
+  emoji: string;
   title: string;
   summary: string;
   status: "active" | "archived";
@@ -60,6 +61,7 @@ export type GeneratedStep = {
 };
 
 export type GeneratedPlan = {
+  emoji: string;
   title: string;
   summary: string;
   assumptions: string[];
@@ -77,4 +79,5 @@ export type Viewer = {
   email: string;
   avatarUrl: string | null;
   isDemo: boolean;
+  isGuest: boolean;
 };

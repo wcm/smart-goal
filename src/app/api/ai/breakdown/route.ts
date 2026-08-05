@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   try {
     const input = GenerateBreakdownInputSchema.parse(await request.json());
     const provider = createAiProvider();
-    const identity = await authorizeAiRequest();
+    const identity = await authorizeAiRequest({ targetDepth: input.targetDepth });
     const output = await provider.generateBreakdown(input, identity);
     return NextResponse.json({ output, mode: isDemoAiEnabled() ? "demo" : "live" });
   } catch (error) {

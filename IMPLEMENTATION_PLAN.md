@@ -11,6 +11,7 @@ Build a goal-planning web application where users can:
 - Add context and regenerate the children of any step.
 - Mark steps complete with automatic parent/child completion propagation.
 - See time-weighted progress for each plan.
+- Try the complete planner before signing in with temporary browser-session plans, eight lifetime AI actions, and three breakdown levels.
 - Sign in with Google, save multiple private plans, and return to them later.
 - Track daily completion activity with a GitHub-style contribution grid and streaks.
 
@@ -23,8 +24,8 @@ Unless changed before implementation, use these product decisions:
 - Visual direction: clean, calm, modern, and productivity-focused
 - Authentication: Google only
 - Plans: private to their owner
-- AI access: authentication required before the first paid generation
-- AI quota: 20 generation actions per user per day
+- Guest access: Supabase anonymous session for quota enforcement, browser-session plan storage, eight lifetime generation actions, and three step levels
+- Registered AI quota: 200 generation actions per user per day
 - Maximum step depth: 10 levels; the plan itself is not counted as a step level
 - Progress: time-weighted across active leaf steps
 - Streak: at least one user-initiated completion on a local calendar day
@@ -38,7 +39,7 @@ Unless changed before implementation, use these product decisions:
 | Application | Next.js App Router and TypeScript | UI, authenticated routes, server endpoints, and rendering in one codebase |
 | Styling | Tailwind CSS, shadcn/ui, and Lucide icons | Fast, accessible, customizable UI implementation |
 | Database | Supabase Postgres | Relational tree storage, transactions, migrations, and reporting |
-| Authentication | Supabase Auth with Google OAuth | Google login and cookie-based authenticated sessions |
+| Authentication | Supabase Auth with anonymous users and Google OAuth | Guest quota identity, Google sign-in, and cookie-based sessions |
 | AI | OpenAI Responses API | Plan, question, and breakdown generation |
 | AI validation | Zod and OpenAI Structured Outputs | Typed, schema-constrained model responses |
 | Default model | `gpt-5.6-terra`, low reasoning effort | Balance of plan quality, latency, and cost; configurable by environment variable |
@@ -53,24 +54,26 @@ This architecture intentionally avoids a separate API server, Redis, a vector da
 ### Public routes
 
 - `/` — landing page and goal input
-- `/login` — Google login
+- `/login` — Google login for returning users
 - `/auth/callback` — Supabase OAuth callback
+- `/plans/new` — contextual questions and first plan generation for guests or registered users
+- `/plans/[planId]` — recursive plan editor for guests or registered users
 
-### Authenticated routes
+### Registered-user routes
 
 - `/plans` — list of saved plans, overall activity, and create-plan CTA
-- `/plans/new` — goal entry or continuation of a pre-login draft
-- `/plans/[planId]` — recursive plan editor
+- `/plans/import` — import a temporary plan when a returning user signs in
 - `/settings` — profile, timezone, and account controls
 
 ### Main flow
 
-1. User enters a goal.
-2. If unauthenticated, the user signs in with Google before a paid AI request is made.
-3. The app creates a plan and asks the AI for the first level of steps.
-4. The plan page displays estimated time, progress, and recursive step controls.
-5. The user can complete steps, request questions, add context, regenerate, or break a step down.
-6. Every successful change is persisted and visible after reload.
+1. User enters a goal. If no session exists, the app silently creates a Supabase anonymous user.
+2. The AI generates three context questions, then creates the first level of the plan from the answers.
+3. The temporary plan is kept in browser session storage and is cleared when the user returns home.
+4. The user can complete steps, add context, regenerate, and break steps down through level three.
+5. “Sign in” snapshots the current plan locally, ends the anonymous session, and starts normal Google OAuth.
+6. After Google resolves a new or returning account, the browser snapshot is copied into that account and removed.
+7. Registered users can create multiple plans and continue through level ten.
 
 ## 5. Data model
 
@@ -88,6 +91,7 @@ This architecture intentionally avoids a separate API server, Redis, a vector da
 - `id`
 - `user_id`
 - `goal`
+- `emoji` — AI-selected at creation and editable by the user
 - `title`
 - `summary`
 - `status` — active or archived
@@ -158,6 +162,15 @@ Only manual events contribute to streak continuation and grid intensity. A manua
 - `generation_count`
 
 An atomic Postgres function increments this counter and rejects requests beyond the configured daily limit.
+
+### `guest_ai_usage`
+
+- `user_id`
+- `generation_count`
+- `created_at`
+- `updated_at`
+
+The database applies the eight-action guest limit for the anonymous user's lifetime and enforces a maximum generated step depth of three. Anonymous plan content is not written to the database. The limit is selected inside the database function and cannot be raised by a browser caller.
 
 ## 6. Tree and completion rules
 
@@ -257,7 +270,7 @@ The model generates only one new level per request. IDs, ownership, depth, order
 - Use `store: false`; Supabase is the application source of truth.
 - Send a stable, privacy-preserving `safety_identifier` derived from the user ID.
 - Enforce goal, context, question-answer, and output size limits.
-- Use a configurable per-user daily quota, defaulting to 20 AI actions.
+- Use a configurable per-user daily quota, defaulting to 200 AI actions.
 - Prevent duplicate concurrent generations for the same plan or step.
 - Retry once only for eligible transient provider errors.
 - Record generation status and token usage without logging secrets or full sensitive prompts.

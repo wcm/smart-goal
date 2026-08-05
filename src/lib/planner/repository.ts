@@ -10,6 +10,11 @@ import type {
 } from "@/lib/planner/types";
 
 const STORAGE_KEY = "goal-planner-demo-data-v1";
+const TEMPORARY_PLAN_KEY = "goal-planner-temporary-plan-v1";
+
+export type RepositoryOptions = {
+  temporary?: boolean;
+};
 
 type DemoData = { plans: PlanRecord[]; events: ActivityEvent[] };
 
@@ -17,6 +22,7 @@ type PlanRow = {
   id: string;
   user_id: string;
   goal: string;
+  emoji: string;
   title: string;
   summary: string;
   status: "active" | "archived";
@@ -80,6 +86,25 @@ function writeDemoData(data: DemoData) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
+export function getTemporaryPlanSnapshot() {
+  if (typeof window === "undefined") return null;
+  try {
+    const value = window.sessionStorage.getItem(TEMPORARY_PLAN_KEY);
+    return value ? (JSON.parse(value) as PlanRecord) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearTemporaryPlan() {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.removeItem(TEMPORARY_PLAN_KEY);
+}
+
+function writeTemporaryPlan(plan: PlanRecord) {
+  window.sessionStorage.setItem(TEMPORARY_PLAN_KEY, JSON.stringify(plan));
+}
+
 function toLocalDate(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -127,6 +152,7 @@ function mapPlan(row: PlanRow, steps: StepRow[], contexts: ContextRow[]): PlanRe
     id: row.id,
     userId: row.user_id,
     goal: row.goal,
+    emoji: row.emoji || "🎯",
     title: row.title,
     summary: row.summary,
     status: row.status,
@@ -145,6 +171,7 @@ function planRow(plan: PlanRecord) {
     id: plan.id,
     user_id: plan.userId,
     goal: plan.goal,
+    emoji: plan.emoji || "🎯",
     title: plan.title,
     summary: plan.summary,
     status: plan.status,
@@ -220,7 +247,11 @@ async function loadRemotePlans(planId?: string) {
   );
 }
 
-export async function listPlans(userId: string) {
+export async function listPlans(userId: string, options: RepositoryOptions = {}) {
+  if (options.temporary) {
+    const plan = getTemporaryPlanSnapshot();
+    return plan?.userId === userId ? [plan] : [];
+  }
   const remote = await loadRemotePlans();
   if (remote) return remote;
   return readDemoData().plans
@@ -228,7 +259,11 @@ export async function listPlans(userId: string) {
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
-export async function getPlan(planId: string, userId: string) {
+export async function getPlan(planId: string, userId: string, options: RepositoryOptions = {}) {
+  if (options.temporary) {
+    const plan = getTemporaryPlanSnapshot();
+    return plan?.id === planId && plan.userId === userId ? plan : null;
+  }
   const remote = await loadRemotePlans(planId);
   if (remote) return remote[0] ?? null;
   return (
@@ -238,7 +273,11 @@ export async function getPlan(planId: string, userId: string) {
   );
 }
 
-export async function savePlan(plan: PlanRecord) {
+export async function savePlan(plan: PlanRecord, options: RepositoryOptions = {}) {
+  if (options.temporary) {
+    writeTemporaryPlan(plan);
+    return plan;
+  }
   const supabase = createSupabaseBrowserClient();
   if (!supabase) {
     const data = readDemoData();
@@ -268,7 +307,13 @@ export async function toggleStepCompletion(
   plan: PlanRecord,
   stepId: string,
   completed: boolean,
+  options: RepositoryOptions = {},
 ) {
+  if (options.temporary) {
+    const updated = setStepCompletion(plan, stepId, completed, new Date().toISOString());
+    writeTemporaryPlan(updated);
+    return updated;
+  }
   const supabase = createSupabaseBrowserClient();
   if (supabase) {
     const { error } = await supabase.rpc("set_step_completion", {
@@ -301,15 +346,19 @@ export async function toggleStepCompletion(
   return updated;
 }
 
-export async function archivePlan(plan: PlanRecord) {
+export async function archivePlan(plan: PlanRecord, options: RepositoryOptions = {}) {
   return savePlan({
     ...plan,
     status: plan.status === "active" ? "archived" : "active",
     updatedAt: new Date().toISOString(),
-  });
+  }, options);
 }
 
-export async function deletePlan(planId: string) {
+export async function deletePlan(planId: string, options: RepositoryOptions = {}) {
+  if (options.temporary) {
+    if (getTemporaryPlanSnapshot()?.id === planId) clearTemporaryPlan();
+    return;
+  }
   const supabase = createSupabaseBrowserClient();
   if (supabase) {
     const { error } = await supabase.from("plans").delete().eq("id", planId);
@@ -322,7 +371,8 @@ export async function deletePlan(planId: string) {
   writeDemoData(data);
 }
 
-export async function getActivity(userId: string) {
+export async function getActivity(userId: string, options: RepositoryOptions = {}) {
+  if (options.temporary) return [];
   const supabase = createSupabaseBrowserClient();
   if (!supabase) {
     return readDemoData().events.filter((event) => event.userId === userId);

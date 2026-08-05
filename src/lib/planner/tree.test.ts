@@ -36,6 +36,7 @@ function plan(steps: StepRecord[]): PlanRecord {
     id: "plan-1",
     userId: "user-1",
     goal: "Ship a useful product",
+    emoji: "🚀",
     title: "Ship a useful product",
     summary: "A plan",
     status: "active",

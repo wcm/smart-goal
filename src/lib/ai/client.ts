@@ -1,5 +1,16 @@
 "use client";
 
+export class AiClientError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public status: number,
+  ) {
+    super(message);
+    this.name = "AiClientError";
+  }
+}
+
 export async function postAi<T>(path: "plan" | "questions" | "breakdown", body: unknown) {
   const response = await fetch(`/api/ai/${path}`, {
     method: "POST",
@@ -13,7 +24,11 @@ export async function postAi<T>(path: "plan" | "questions" | "breakdown", body: 
     mode?: "demo" | "live";
   };
   if (!response.ok || !data.output) {
-    throw new Error(data.error || "The AI request could not be completed.");
+    throw new AiClientError(
+      data.error || "The AI request could not be completed.",
+      data.code || "AI_REQUEST_FAILED",
+      response.status,
+    );
   }
   return { output: data.output, mode: data.mode ?? "live" };
 }

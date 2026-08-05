@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { AuthBenefits } from "@/components/auth-benefits";
 import { LoginCard } from "@/components/login-card";
 import { SiteHeader } from "@/components/site-header";
 import { hasSupabaseConfig } from "@/lib/config";
@@ -18,7 +19,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <main className="login-page">
         <section className="login-card">
           <h1>Sign in to continue</h1>
-          <p>Save your plans and keep progress in sync.</p>
+          <AuthBenefits />
           <LoginCard nextPath={nextPath} demoMode={!hasSupabaseConfig()} />
         </section>
       </main>
