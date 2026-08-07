@@ -77,6 +77,8 @@ export function DashboardClient({ viewer }: { viewer: Viewer }) {
       )}
       <section className="dashboard-heading"><h1>{viewer.isGuest ? "My plan" : "My plans"}</h1></section>
 
+      {!viewer.isGuest && <ActivityGrid events={activity} />}
+
       <section className="quick-goal">
         <span className="goal-field-mark"><GoalInputIcon /></span>
         <input value={goal} onChange={(event) => setGoal(event.target.value)} onKeyDown={(event) => event.key === "Enter" && startGoal()} placeholder="Start a new plan…" aria-label="Start a new plan" />
@@ -113,7 +115,6 @@ export function DashboardClient({ viewer }: { viewer: Viewer }) {
           </div>
         )}
       </section>
-      {!viewer.isGuest && <ActivityGrid events={activity} />}
     </main>
   );
 }

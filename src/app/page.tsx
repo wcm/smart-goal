@@ -56,6 +56,30 @@ const examplePlans = [
   },
 ];
 
+const userStories = [
+  {
+    quote: "I stopped carrying the whole launch in my head. Now I can open the plan, see the next useful action, and get moving.",
+    initials: "IF",
+    role: "Indie founder",
+    use: "Planning a product launch",
+    tone: "violet",
+  },
+  {
+    quote: "Breaking my dissertation into work I could finish in one sitting made a huge goal feel calm and surprisingly manageable.",
+    initials: "GS",
+    role: "Graduate student",
+    use: "Finishing a dissertation",
+    tone: "blue",
+  },
+  {
+    quote: "The time estimates helped me build a training plan around real life—not the imaginary perfect week I usually plan for.",
+    initials: "AR",
+    role: "Amateur runner",
+    use: "Training for a first race",
+    tone: "coral",
+  },
+];
+
 function ExamplePlan({ plan }: { plan: (typeof examplePlans)[number] }) {
   return (
     <article className={`example-plan tone-${plan.tone}`}>
@@ -105,6 +129,26 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
         <div className="gallery-heading"><h2>Plans that meet you where you are.</h2></div>
         <div className="example-grid">
           {examplePlans.map((plan) => <ExamplePlan key={plan.title} plan={plan} />)}
+        </div>
+      </section>
+
+      <section className="testimonials page-shell" aria-labelledby="testimonials-heading">
+        <div className="testimonial-panel">
+          <div className="testimonial-heading">
+            <span>Illustrative user stories</span>
+            <h2 id="testimonials-heading">Clarity creates momentum.</h2>
+          </div>
+          <div className="testimonial-grid">
+            {userStories.map((story) => (
+              <figure className="testimonial-card" key={story.role}>
+                <blockquote>“{story.quote}”</blockquote>
+                <figcaption>
+                  <span className={`testimonial-avatar tone-${story.tone}`} aria-hidden="true">{story.initials}</span>
+                  <span><strong>{story.role}</strong><small>{story.use}</small></span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
         </div>
       </section>
 
