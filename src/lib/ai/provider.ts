@@ -338,7 +338,7 @@ class OpenAiProvider {
         { role: "system", content: BREAKDOWN_PROMPT },
         {
           role: "user",
-          content: `Goal: ${args.goal}\nPlan summary: ${args.planSummary}\nAncestor path: ${args.ancestorPath.join(" > ")}\nParent step: ${args.targetTitle}\nParent details: ${args.targetDescription}\nParent time: ${args.targetMinutes} minutes\nParent depth: ${args.targetDepth}\nContext:\n${contextText(args.context)}`,
+          content: `Goal: ${args.goal}\nPlan summary: ${args.planSummary}\nAncestor path: ${args.ancestorPath.join(" > ")}\nParent step: ${args.targetTitle}\nParent details: ${args.targetDescription}\nParent time: ${args.targetMinutes === 0 ? "under 1 minute" : `${args.targetMinutes} minutes`}\nParent depth: ${args.targetDepth}\nContext:\n${contextText(args.context)}`,
         },
       ],
       text: {

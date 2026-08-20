@@ -10,5 +10,15 @@ export function createId() {
 }
 
 export function asErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Something went wrong.";
+  if (error instanceof Error) return error.message;
+  if (
+    typeof error === "object"
+    && error !== null
+    && "message" in error
+    && typeof error.message === "string"
+    && error.message.trim()
+  ) {
+    return error.message;
+  }
+  return "Something went wrong.";
 }

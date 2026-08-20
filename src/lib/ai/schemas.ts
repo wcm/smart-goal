@@ -66,7 +66,7 @@ export const GenerateBreakdownInputSchema = z.object({
   planSummary: z.string().max(3000),
   targetTitle: z.string().trim().min(1).max(500),
   targetDescription: z.string().max(2000),
-  targetMinutes: z.number().int().min(2).max(525600),
+  targetMinutes: z.number().int().min(0).max(525600),
   targetDepth: z.number().int().min(1).max(9),
   ancestorPath: z.array(z.string().max(500)).max(10),
   context: z.array(ContextInputSchema).max(12).default([]),

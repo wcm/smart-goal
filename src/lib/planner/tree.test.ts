@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   calculatePlanProgress,
   createStepRecords,
+  formatMinutes,
   normalizeChildEstimates,
   replaceStepChildren,
   setStepCompletion,
@@ -63,6 +64,20 @@ describe("normalizeChildEstimates", () => {
     expect(result.every((item) => Number.isInteger(item.estimatedMinutes))).toBe(true);
     expect(result.every((item) => item.estimatedMinutes > 0)).toBe(true);
   });
+
+  it.each([1, 0])("uses the sub-minute sentinel when breaking down a %i-minute step", (minutes) => {
+    const result = normalizeChildEstimates(
+      [
+        { title: "One", description: "", estimatedMinutes: 1 },
+        { title: "Two", description: "", estimatedMinutes: 1 },
+      ],
+      minutes,
+    );
+
+    expect(result).toHaveLength(2);
+    expect(result.every((item) => item.estimatedMinutes === 0)).toBe(true);
+    expect(result.every((item) => formatMinutes(item.estimatedMinutes) === "<1m")).toBe(true);
+  });
 });
 
 describe("completion propagation", () => {
@@ -101,6 +116,16 @@ describe("time-weighted progress", () => {
       percentage: 25,
     });
   });
+
+  it("falls back to completed step count for an entirely sub-minute plan", () => {
+    const first = step({ id: "first", estimatedMinutes: 0, isCompleted: true });
+    const second = step({ id: "second", estimatedMinutes: 0, position: 1 });
+    expect(calculatePlanProgress(plan([first, second]))).toEqual({
+      completedMinutes: 0,
+      totalMinutes: 0,
+      percentage: 50,
+    });
+  });
 });
 
 describe("regeneration", () => {
@@ -123,6 +148,25 @@ describe("regeneration", () => {
     expect(result.steps.find((item) => item.id === "old")?.archivedAt).toBe(now);
     expect(newChildren.reduce((sum, item) => sum + item.estimatedMinutes, 0)).toBe(90);
     expect(newChildren.every((item) => item.depth === 2)).toBe(true);
+  });
+
+  it("archives every descendant layer when refreshing a parent", () => {
+    const parent = step({ id: "parent", estimatedMinutes: 90 });
+    const child = step({ id: "child", parentId: "parent", depth: 2, estimatedMinutes: 90 });
+    const grandchild = step({ id: "grandchild", parentId: "child", depth: 3, estimatedMinutes: 90 });
+    const result = replaceStepChildren({
+      plan: plan([parent, child, grandchild]),
+      stepId: "parent",
+      generationId: "generation-2",
+      now,
+      generated: [
+        { title: "A", description: "", estimatedMinutes: 1 },
+        { title: "B", description: "", estimatedMinutes: 1 },
+      ],
+    });
+
+    expect(result.steps.find((item) => item.id === "child")?.archivedAt).toBe(now);
+    expect(result.steps.find((item) => item.id === "grandchild")?.archivedAt).toBe(now);
   });
 
   it("rejects an eleventh layer", () => {

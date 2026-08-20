@@ -54,16 +54,19 @@ export function calculatePlanProgress(plan: PlanRecord) {
   const completedMinutes = leaves
     .filter((step) => step.isCompleted)
     .reduce((sum, step) => sum + step.estimatedMinutes, 0);
+  const completedLeaves = leaves.filter((step) => step.isCompleted).length;
 
   return {
     completedMinutes,
     totalMinutes,
-    percentage:
-      totalMinutes === 0 ? 0 : Math.round((completedMinutes / totalMinutes) * 100),
+    percentage: totalMinutes === 0
+      ? leaves.length === 0 ? 0 : Math.round((completedLeaves / leaves.length) * 100)
+      : Math.round((completedMinutes / totalMinutes) * 100),
   };
 }
 
 export function formatMinutes(totalMinutes: number) {
+  if (totalMinutes === 0) return "<1m";
   const minutes = Math.max(0, Math.round(totalMinutes));
   const hours = Math.floor(minutes / 60);
   const remainder = minutes % 60;
@@ -77,15 +80,23 @@ export function normalizeChildEstimates(
   generated: GeneratedStep[],
   targetMinutes: number,
 ) {
-  const total = Math.max(2, Math.round(targetMinutes));
+  const total = Math.max(0, Math.round(targetMinutes));
   const usable = generated
     .filter((step) => step.title.trim())
-    .slice(0, Math.min(8, total));
+    .slice(0, Math.min(8, Math.max(2, total)));
 
   if (usable.length < 2) {
     throw new Error("A breakdown needs at least two useful steps.");
   }
 
+  if (total <= 1) {
+    return usable.map((step) => ({
+      ...step,
+      title: step.title.trim(),
+      description: step.description.trim(),
+      estimatedMinutes: 0,
+    }));
+  }
   const baseline = usable.length;
   const distributable = total - baseline;
   const weights = usable.map((step) => Math.max(1, step.estimatedMinutes));
@@ -137,7 +148,7 @@ export function createStepRecords(args: {
     position,
     title: step.title.trim(),
     description: step.description.trim(),
-    estimatedMinutes: Math.max(1, Math.round(step.estimatedMinutes)),
+    estimatedMinutes: Math.max(0, Math.round(step.estimatedMinutes)),
     isCompleted: false,
     completedAt: null,
     archivedAt: null,
