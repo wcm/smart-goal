@@ -5,9 +5,7 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  GitBranchPlus,
   LoaderCircle,
-  LockKeyhole,
   Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -69,51 +67,69 @@ function StepCard({
   const hasChildren = node.children.length > 0;
   const atLimit = node.depth >= MAX_STEP_DEPTH;
   const atGuestLimit = isGuest && node.depth >= GUEST_MAX_STEP_DEPTH && !atLimit;
-  const tooSmall = node.estimatedMinutes < 2;
   const busy = busyTarget === node.id;
 
   return (
     <article className={`step-branch depth-${Math.min(node.depth, 4)} ${node.isCompleted ? "completed" : ""}`}>
-      <div className="step-card">
+      <div
+        className={`step-card ${hasChildren ? "is-collapsible" : ""}`}
+        onClick={(event) => {
+          if (busy || !hasChildren || (event.target as HTMLElement).closest("button, a, input, textarea, select")) return;
+          setCollapsed((value) => !value);
+        }}
+      >
         <div className="step-leading">
-          {hasChildren ? (
-            <button className="collapse-button" onClick={() => setCollapsed((value) => !value)} aria-label={collapsed ? "Expand child steps" : "Collapse child steps"}>
+          {hasChildren && !busy ? (
+            <button
+              className="collapse-button"
+              onClick={() => setCollapsed((value) => !value)}
+              aria-label={collapsed ? "Expand child steps" : "Collapse child steps"}
+            >
               {collapsed ? <ChevronRight size={17} /> : <ChevronDown size={17} />}
             </button>
           ) : <span className="collapse-spacer" />}
-          <button
-            className="step-checkbox"
-            onClick={() => onToggle(node, !node.isCompleted)}
-            aria-label={`${node.isCompleted ? "Mark incomplete" : "Mark complete"}: ${node.title}`}
-            aria-pressed={node.isCompleted}
-          >
-            {node.isCompleted && <Check size={15} strokeWidth={3} />}
-          </button>
         </div>
         <div className="step-body">
-          <h3>{node.title}</h3>
           <div className="step-meta">
-            <span className="time-chip">{formatMinutes(node.estimatedMinutes)}</span>
             <span className="step-index" aria-label={`Level ${node.depth}, step ${index + 1}`}>
               <span className="step-depth-dots" aria-hidden="true">
                 {Array.from({ length: node.depth }, (_, dotIndex) => <i key={dotIndex} />)}
               </span>
-              <span aria-hidden="true">{index + 1}</span>
+              <span aria-hidden="true">Step {index + 1}</span>
             </span>
+            <span className="time-chip">{formatMinutes(node.estimatedMinutes)}</span>
           </div>
+          <h3>{node.title}</h3>
           <p>{node.description}</p>
-          {!hasChildren && <div className="step-actions">
-            <Button size="sm" onClick={() => onBreakdown(node)} disabled={Boolean(busyTarget) || atLimit || tooSmall} title={atLimit ? `Maximum depth of ${MAX_STEP_DEPTH} reached` : atGuestLimit ? "Sign in to unlock more levels" : undefined}>
-              {busy ? <LoaderCircle className="spin" size={15} /> : atLimit || atGuestLimit ? <LockKeyhole size={15} /> : <GitBranchPlus size={15} />}
-              {busy ? "Working…" : atLimit ? "Depth limit" : atGuestLimit ? "Unlock next level" : "Break it down"}
-            </Button>
-          </div>}
+          <div className="step-actions">
+            {busy ? (
+              <span className="step-working-indicator" role="status"><LoaderCircle className="spin" size={16} />Working...</span>
+            ) : (
+              <>
+                {!node.isCompleted && !hasChildren && !atLimit && (
+                  <Button size="sm" onClick={() => onBreakdown(node)} disabled={Boolean(busyTarget)} title={atGuestLimit ? "Sign in to unlock more levels" : undefined}>
+                    {atGuestLimit ? "Unlock next level" : "Break it down"}
+                  </Button>
+                )}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className={`step-done-button ${node.isCompleted ? "is-done" : ""}`}
+                  onClick={() => onToggle(node, !node.isCompleted)}
+                  disabled={Boolean(busyTarget)}
+                  aria-label={`${node.isCompleted ? "Mark incomplete" : "Mark as done"}: ${node.title}`}
+                  aria-pressed={node.isCompleted}
+                >
+                  {node.isCompleted ? <>Done <Check size={15} strokeWidth={2.6} /></> : "Mark as done"}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
         <button className="step-edit-button" onClick={() => onEdit(node)} disabled={Boolean(busyTarget)} aria-label={`Edit ${node.title}`} title="Edit step"><Pencil size={16} /></button>
       </div>
-      {hasChildren && !collapsed && (
+      {hasChildren && !collapsed && !busy && (
         <div className="step-children">
-          <span className="branch-line" aria-hidden="true" />
           <StepTree nodes={node.children} busyTarget={busyTarget} onToggle={onToggle} onBreakdown={onBreakdown} onEdit={onEdit} isGuest={isGuest} />
         </div>
       )}

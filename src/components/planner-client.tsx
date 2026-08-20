@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  ChevronRight,
   Clock3,
   CloudOff,
   LoaderCircle,
@@ -45,6 +46,7 @@ import { asErrorMessage, createId } from "@/lib/utils";
 
 type UpgradeReason = "save" | "depth" | "usage";
 const MANUAL_STEP_CONTEXT_QUESTION = "Additional step context";
+const SMART_DEFINITION_PREFIX = "SMART goal definition:";
 
 function hasUsefulAnswer(answer: string) {
   const normalized = answer.trim().toLowerCase();
@@ -65,6 +67,12 @@ function getPlanContextItems(plan: PlanRecord) {
     ...plan.assumptions.map((assumption) => assumption.trim()).filter(Boolean),
   ];
   return Array.from(new Set(items));
+}
+
+function displayPlanContextItem(item: string) {
+  return item.startsWith(SMART_DEFINITION_PREFIX)
+    ? item.replace(SMART_DEFINITION_PREFIX, `${SMART_DEFINITION_PREFIX}\n`)
+    : item;
 }
 
 function getStepContextText(plan: PlanRecord, stepId: string) {
@@ -388,11 +396,12 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
 
       <details className="assumptions">
         <summary>
-          <span>Plan context</span>
-          <button className="context-edit-button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); setEditTarget("plan"); }} aria-label="Edit plan context" title="Edit plan context"><Pencil size={15} /></button>
+          <span className="assumptions-collapse-icon" aria-hidden="true"><ChevronRight size={17} /></span>
+          <h2>Plan context</h2>
+          <button className="step-edit-button context-edit-button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); setEditTarget("plan"); }} aria-label="Edit plan context" title="Edit plan context"><Pencil size={16} /></button>
         </summary>
         {planContextItems.length > 0
-          ? <ul>{planContextItems.map((item) => <li key={item}>{item}</li>)}</ul>
+          ? <ul className="plan-context-list">{planContextItems.map((item) => <li className="plan-context-item" key={item}>{displayPlanContextItem(item)}</li>)}</ul>
           : <p className="assumptions-empty">No additional context yet.</p>}
       </details>
 
@@ -412,8 +421,13 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
         step={editedStep}
         initialContext={editedStep ? getStepContextText(plan, editedStep.id) : ""}
         hasChildren={editedStepHasChildren}
-        actionDisabled={Boolean(editedStep && editedStep.depth >= MAX_STEP_DEPTH)}
+        actionDisabled={Boolean(editedStep && (
+          editedStep.isCompleted
+          || editedStep.depth >= MAX_STEP_DEPTH
+          || (viewer.isGuest && editedStep.depth >= GUEST_MAX_STEP_DEPTH)
+        ))}
         busy={editBusy}
+        onClose={() => setEditTarget(null)}
         onSave={(values, action) => void saveStepChanges(values, action)}
       />
     </main>

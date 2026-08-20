@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, GitBranchPlus, RefreshCw, X } from "lucide-react";
+import { AlertTriangle, LoaderCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StepRecord } from "@/lib/planner/types";
 
@@ -91,6 +91,7 @@ export function StepEditorDialog({
   hasChildren,
   actionDisabled,
   busy,
+  onClose,
   onSave,
 }: {
   step: StepRecord | null;
@@ -98,6 +99,7 @@ export function StepEditorDialog({
   hasChildren: boolean;
   actionDisabled: boolean;
   busy: boolean;
+  onClose: () => void;
   onSave: (values: StepEditorValues, action?: StepEditorAction) => void;
 }) {
   if (!step) return null;
@@ -109,6 +111,7 @@ export function StepEditorDialog({
       hasChildren={hasChildren}
       actionDisabled={actionDisabled}
       busy={busy}
+      onClose={onClose}
       onSave={onSave}
     />
   );
@@ -120,6 +123,7 @@ function StepEditorContent({
   hasChildren,
   actionDisabled,
   busy,
+  onClose,
   onSave,
 }: {
   step: StepRecord;
@@ -127,25 +131,35 @@ function StepEditorContent({
   hasChildren: boolean;
   actionDisabled: boolean;
   busy: boolean;
+  onClose: () => void;
   onSave: (values: StepEditorValues, action?: StepEditorAction) => void;
 }) {
   const [title, setTitle] = useState(step.title);
   const [description, setDescription] = useState(step.description);
-  const [estimatedMinutes, setEstimatedMinutes] = useState(String(step.estimatedMinutes));
+  const [estimatedMinutes, setEstimatedMinutes] = useState(step.estimatedMinutes === 0 ? "<1" : String(step.estimatedMinutes));
   const [context, setContext] = useState(initialContext);
-  const [confirmationStep, setConfirmationStep] = useState<0 | 1 | 2>(0);
+  const [confirmRefresh, setConfirmRefresh] = useState(false);
+  const [pendingAction, setPendingAction] = useState<StepEditorAction | "save" | null>(null);
 
   function values(): StepEditorValues {
+    const normalizedMinutes = estimatedMinutes.trim().toLowerCase().replaceAll(" ", "");
+    const parsedMinutes = normalizedMinutes === "<1" || normalizedMinutes === "<1m" || normalizedMinutes === "<1min"
+      ? 0
+      : Number(normalizedMinutes);
+    const validMinutes = Number.isFinite(parsedMinutes) && parsedMinutes >= 0
+      ? parsedMinutes
+      : step.estimatedMinutes;
     return {
       title: title.trim() || step.title,
       description: description.trim(),
-      estimatedMinutes: Math.min(525600, Math.max(2, Math.round(Number(estimatedMinutes) || step.estimatedMinutes))),
+      estimatedMinutes: Math.min(525600, Math.max(0, Math.round(validMinutes))),
       context: context.trim(),
     };
   }
 
   function saveAndClose(action?: StepEditorAction) {
     if (busy) return;
+    setPendingAction(action ?? "save");
     onSave(values(), action);
   }
 
@@ -153,15 +167,15 @@ function StepEditorContent({
     function handleEscape(event: KeyboardEvent) {
       if (event.key !== "Escape" || busy) return;
       event.preventDefault();
-      saveAndClose();
+      onClose();
     }
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  });
+  }, [busy, onClose]);
 
   return (
     <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => {
-      if (event.currentTarget === event.target) saveAndClose();
+      if (event.currentTarget === event.target && !busy) onClose();
     }}>
       <form className="context-dialog edit-context-dialog" role="dialog" aria-modal="true" aria-labelledby="step-editor-title" onSubmit={(event) => {
         event.preventDefault();
@@ -169,7 +183,7 @@ function StepEditorContent({
       }}>
         <div className="dialog-heading">
           <h2 id="step-editor-title">Edit step</h2>
-          <button type="button" className="icon-button" onClick={() => saveAndClose()} disabled={busy} aria-label="Save and close dialog"><X size={19} /></button>
+          <button type="button" className="icon-button" onClick={onClose} disabled={busy} aria-label="Close dialog"><X size={19} /></button>
         </div>
         <div className="edit-context-fields">
           <label className="edit-context-field">
@@ -182,7 +196,7 @@ function StepEditorContent({
           </label>
           <label className="edit-context-field edit-time-field">
             <span>Estimated time</span>
-            <span><input type="number" value={estimatedMinutes} onChange={(event) => setEstimatedMinutes(event.target.value)} min={2} max={525600} required /><small>minutes</small></span>
+            <span><input type="text" inputMode="decimal" value={estimatedMinutes} onChange={(event) => setEstimatedMinutes(event.target.value)} maxLength={7} required /><small>minutes</small></span>
           </label>
           <label className="edit-context-field">
             <span>Context</span>
@@ -197,35 +211,36 @@ function StepEditorContent({
           </label>
         </div>
         <div className="step-editor-footer">
-          {confirmationStep === 0 && <small className="edit-autosave-note">Changes save automatically when you close.</small>}
-          {hasChildren && confirmationStep === 1 ? (
+          {hasChildren && !actionDisabled && confirmRefresh ? (
             <div className="regenerate-confirmation" role="alert">
               <AlertTriangle size={18} />
               <div><strong>Replace all sub-tasks?</strong><p>Their titles, descriptions, context, and completion progress will all be updated.</p></div>
               <div>
-                <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmationStep(0)}>Not now</Button>
-                <Button type="button" size="sm" onClick={() => setConfirmationStep(2)}>Continue</Button>
-              </div>
-            </div>
-          ) : hasChildren && confirmationStep === 2 ? (
-            <div className="regenerate-confirmation regenerate-confirmation-final" role="alert">
-              <AlertTriangle size={18} />
-              <div><strong>One final check</strong><p>This cannot be undone. Are you sure you want to regenerate every sub-task?</p></div>
-              <div>
-                <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmationStep(1)}>Back</Button>
-                <Button type="button" size="sm" onClick={() => saveAndClose("regenerate")} disabled={busy}>{busy ? "Saving…" : "Yes, regenerate"}</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmRefresh(false)} disabled={busy}>Not now</Button>
+                <Button type="button" size="sm" onClick={() => saveAndClose("regenerate")} disabled={busy}>
+                  {busy && pendingAction === "regenerate" && <LoaderCircle className="spin" size={15} />}
+                  {busy && pendingAction === "regenerate" ? "Saving…" : "Confirm"}
+                </Button>
               </div>
             </div>
           ) : (
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => hasChildren ? setConfirmationStep(1) : saveAndClose("breakdown")}
-              disabled={busy || actionDisabled || (Number(estimatedMinutes) || step.estimatedMinutes) < 2}
-            >
-              {busy ? null : hasChildren ? <RefreshCw size={15} /> : <GitBranchPlus size={15} />}
-              {busy ? "Saving…" : hasChildren ? "Regenerate all sub-tasks" : "Break it down"}
-            </Button>
+            <div className="step-editor-actions">
+              <Button type="button" variant="secondary" size="sm" onClick={() => saveAndClose()} disabled={busy}>
+                {busy && pendingAction === "save" && <LoaderCircle className="spin" size={15} />}
+                {busy && pendingAction === "save" ? "Saving…" : "Save"}
+              </Button>
+              {!actionDisabled && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => hasChildren ? setConfirmRefresh(true) : saveAndClose("breakdown")}
+                  disabled={busy}
+                >
+                  {busy && pendingAction === "breakdown" && <LoaderCircle className="spin" size={15} />}
+                  {busy && pendingAction === "breakdown" ? "Saving…" : hasChildren ? "Save & Refresh sub-tasks" : "Save & Break it down"}
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </form>

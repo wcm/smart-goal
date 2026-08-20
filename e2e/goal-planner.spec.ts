@@ -25,7 +25,7 @@ test("creates, breaks down, completes, and persists a demo plan", async ({ page 
   await page.getByRole("button", { name: "Break it down" }).first().click();
   await expect(page.getByLabel("Level 2, step 1").first()).toBeVisible();
 
-  await page.getByRole("button", { name: /Mark complete: Define the finish line/ }).click();
+  await page.getByRole("button", { name: /Mark as done: Define the finish line/ }).click();
   await expect(page.getByText(/%/).first()).not.toContainText("0%");
 
   await page.reload();
