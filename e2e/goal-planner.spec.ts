@@ -11,14 +11,13 @@ test("creates, breaks down, completes, and persists a demo plan", async ({ page 
   await createButton.click();
 
   await expect(page).toHaveURL(/\/plans\/new/);
-  await expect(page.getByRole("heading", { name: "Make the finish line clear." })).toBeVisible();
   await expect(page.getByLabel("Your SMART goal")).toHaveValue(/Publish one useful newsletter issue/);
   await expect(page.getByLabel("Specific")).toBeVisible();
   await page.getByRole("button", { name: "Continue: add context" }).click();
-  await expect(page.getByRole("heading", { name: "Add your real-world context." })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Make it SMART/ })).toBeVisible();
   await expect(page.locator("textarea")).toHaveCount(4);
   await page.locator("textarea").first().fill("A practical weekly issue for early-stage product builders.");
-  await page.getByRole("button", { name: "Build my SMART plan" }).click();
+  await page.getByRole("button", { name: "Build my execution plan" }).click();
   await expect(page).toHaveURL(/\/plans\/[a-f0-9-]+/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Publish one useful newsletter issue");
 
@@ -35,13 +34,12 @@ test("creates, breaks down, completes, and persists a demo plan", async ({ page 
 
 test("makes a goal SMART before asking three context questions", async ({ page }) => {
   await page.goto("/plans/new?goal=Learn%20conversational%20Spanish");
-  await expect(page.getByRole("heading", { name: "Make the finish line clear." })).toBeVisible();
   await expect(page.getByLabel("Your SMART goal")).toHaveValue(/10-minute everyday conversation/);
   await page.getByRole("button", { name: "Continue: add context" }).click();
   await expect(page.locator("textarea")).toHaveCount(4);
   await page.locator("textarea").nth(1).fill("I want to hold a travel conversation in six months.");
   await page.getByLabel(/Anything else that feels critical/).fill("Keep the plan to three hours per week.");
-  await page.getByRole("button", { name: "Build my SMART plan" }).click();
+  await page.getByRole("button", { name: "Build my execution plan" }).click();
   await expect(page).toHaveURL(/\/plans\/[a-f0-9-]+/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Hold a 10-minute everyday conversation");
 });

@@ -46,12 +46,20 @@ function smartContext(smartGoal: GeneratedSmartGoal) {
 export function NewPlanClient({ viewer, initialGoal }: { viewer: Viewer; initialGoal: string }) {
   const router = useRouter();
   const startingGoal = initialGoal.trim();
-  const [stage, setStage] = useState<"smart" | "context">("smart");
+  const [stage, setStage] = useState<"smart" | "context" | "plan">("smart");
   const [smartGoal, setSmartGoal] = useState<GeneratedSmartGoal | null>(null);
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
   const [busy, setBusy] = useState<"smart" | "questions" | "plan" | null>("smart");
   const [error, setError] = useState("");
   const [smartAttempt, setSmartAttempt] = useState(0);
+  const [planContext, setPlanContext] = useState<{ question: string; answer: string }[]>([]);
+
+  function goToStage(next: "smart" | "context") {
+    if (busy) return;
+    setError("");
+    setStage(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   useEffect(() => {
     let active = true;
@@ -110,8 +118,11 @@ export function NewPlanClient({ viewer, initialGoal }: { viewer: Viewer; initial
 
   async function generate(context: { question: string; answer: string }[]) {
     if (!smartGoal) return;
+    setStage("plan");
+    setPlanContext(context);
     setBusy("plan");
     setError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
     const allContext = [smartContext(smartGoal), ...context];
     try {
       const { output } = await postAi<GeneratedPlan>("plan", { goal: smartGoal.goal, context: allContext });
@@ -171,25 +182,28 @@ export function NewPlanClient({ viewer, initialGoal }: { viewer: Viewer; initial
     <main className="new-plan page-shell app-shell">
       <div className="page-back-row"><PageBackLink href={viewer.isGuest ? "/" : "/plans"}>{viewer.isGuest ? "Home" : "Back to goals"}</PageBackLink></div>
 
-      <nav className="goal-builder-progress" aria-label="SMART goal builder progress">
-        {stage === "context" ? (
-          <button type="button" className="complete" onClick={() => setStage("smart")}><i><Check size={13} /></i> Make it SMART</button>
-        ) : (
-          <span className="active"><i>1</i> Make it SMART</span>
-        )}
-        <b className={stage === "context" ? "complete-line" : ""} aria-hidden="true" />
-        <span className={stage === "context" ? "active" : ""}><i>2</i> Add context</span>
-        <b aria-hidden="true" />
-        <span><i>3</i> Build the plan</span>
-      </nav>
-
       <section className="new-plan-card smart-builder-card">
+        <nav className="goal-builder-progress" aria-label="SMART goal builder progress">
+          {stage === "smart" ? (
+            <span className="active"><i>1</i> Make it SMART</span>
+          ) : busy ? (
+            <span className="complete"><i><Check size={13} /></i> Make it SMART</span>
+          ) : (
+            <button type="button" className="complete" onClick={() => goToStage("smart")}><i><Check size={13} /></i> Make it SMART</button>
+          )}
+          <b className={stage === "smart" ? "" : "complete-line"} aria-hidden="true" />
+          {stage === "plan" && !busy ? (
+            <button type="button" className="complete" onClick={() => goToStage("context")}><i><Check size={13} /></i> Add context</button>
+          ) : (
+            <span className={stage === "context" ? "active" : stage === "plan" ? "complete" : ""}>
+              {stage === "plan" ? <i><Check size={13} /></i> : <i>2</i>} Add context
+            </span>
+          )}
+          <b className={stage === "plan" ? "complete-line" : ""} aria-hidden="true" />
+          <span className={stage === "plan" ? "active" : ""}><i>3</i> Build the plan</span>
+        </nav>
         {stage === "smart" ? (
           <>
-            <div className="smart-builder-heading">
-              <h1>Make the finish line clear.</h1>
-            </div>
-
             <div className="starting-goal"><span>Starting goal</span><p>“{startingGoal}”</p></div>
             {error && <div className="error-card" role="alert">{error}</div>}
 
@@ -242,12 +256,24 @@ export function NewPlanClient({ viewer, initialGoal }: { viewer: Viewer; initial
               </div>
             )}
           </>
+        ) : stage === "plan" ? (
+          <div className="new-plan-context smart-context-stage">
+            <div className="smart-goal-summary">
+              <span>Your SMART goal</span>
+              <strong>{smartGoal?.goal}</strong>
+            </div>
+            {error && <div className="error-card" role="alert">{error}</div>}
+
+            {busy === "plan" && (
+              <div className="context-loading"><LoaderCircle className="spin" size={20} /> Building your execution plan…</div>
+            )}
+
+            {!busy && error && (
+              <Button variant="secondary" onClick={() => void generate(planContext)}>Try again</Button>
+            )}
+          </div>
         ) : (
           <div className="new-plan-context smart-context-stage">
-            <div className="smart-builder-heading context-heading">
-              <h1>Add your real-world context.</h1>
-            </div>
-
             <div className="smart-goal-summary">
               <span>Your SMART goal</span>
               <strong>{smartGoal?.goal}</strong>
@@ -267,8 +293,8 @@ export function NewPlanClient({ viewer, initialGoal }: { viewer: Viewer; initial
                 key={questions.map((question) => question.question).join("|")}
                 questions={questions}
                 busy={busy === "plan"}
-                submitLabel="Build my SMART plan"
-                busyLabel="Building your SMART plan…"
+                submitLabel="Build my execution plan"
+                initialAnswers={planContext}
                 onSubmit={generate}
               />
             )}

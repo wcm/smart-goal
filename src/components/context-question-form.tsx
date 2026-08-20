@@ -1,35 +1,42 @@
 "use client";
 
 import { useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { GeneratedQuestion } from "@/lib/planner/types";
 
 type ContextAnswer = { question: string; answer: string };
 
 const ADDITIONAL_CONTEXT_QUESTION = "Anything else that feels critical?";
+const NO_ANSWER = "No preference provided.";
 
 export function ContextQuestionForm({
   questions,
   busy,
   submitLabel,
-  busyLabel,
+  initialAnswers,
   onCancel,
   onSubmit,
 }: {
   questions: GeneratedQuestion[];
   busy: boolean;
   submitLabel: string;
-  busyLabel: string;
+  initialAnswers?: ContextAnswer[];
   onCancel?: () => void;
   onSubmit: (answers: ContextAnswer[]) => void;
 }) {
-  const [answers, setAnswers] = useState<string[]>(() => questions.map(() => ""));
-  const [additionalContext, setAdditionalContext] = useState("");
+  const [answers, setAnswers] = useState<string[]>(() => questions.map((question) => {
+    const previous = initialAnswers?.find((entry) => entry.question === question.question)?.answer;
+    return previous && previous !== NO_ANSWER ? previous : "";
+  }));
+  const [additionalContext, setAdditionalContext] = useState(
+    () => initialAnswers?.find((entry) => entry.question === ADDITIONAL_CONTEXT_QUESTION)?.answer ?? "",
+  );
 
   function submit() {
     const generatedAnswers = questions.map((question, index) => ({
       question: question.question,
-      answer: answers[index]?.trim() || "No preference provided.",
+      answer: answers[index]?.trim() || NO_ANSWER,
     }));
     const extra = additionalContext.trim();
     onSubmit(extra
@@ -66,9 +73,7 @@ export function ContextQuestionForm({
       </div>
       <div className="dialog-actions">
         {onCancel && <Button variant="ghost" onClick={onCancel} disabled={busy}>Cancel</Button>}
-        <Button onClick={submit} disabled={busy}>
-          {busy ? busyLabel : submitLabel}
-        </Button>
+        <Button onClick={submit} disabled={busy}>{submitLabel} <ArrowRight size={17} /></Button>
       </div>
     </>
   );

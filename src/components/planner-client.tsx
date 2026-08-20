@@ -1,14 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Archive,
   ChevronRight,
   Clock3,
   CloudOff,
   LoaderCircle,
+  MoreHorizontal,
   Pencil,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import {
   PlanContextEditorDialog,
@@ -24,6 +28,8 @@ import { AiClientError, postAi } from "@/lib/ai/client";
 import { GUEST_MAX_STEP_DEPTH, MAX_STEP_DEPTH } from "@/lib/config";
 import { clearGuestPlanSnapshot } from "@/lib/planner/guest-transfer";
 import {
+  archivePlan,
+  deletePlan,
   getPlan,
   savePlan,
   toggleStepCompletion,
@@ -156,6 +162,10 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
   const [editTarget, setEditTarget] = useState<"plan" | string | null>(null);
   const [editBusy, setEditBusy] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState<UpgradeReason | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [planActionBusy, setPlanActionBusy] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     getPlan(planId, viewer.id, { temporary: viewer.isGuest })
@@ -357,6 +367,50 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
     }
   }
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleDismiss(event: MouseEvent | KeyboardEvent) {
+      if (event instanceof KeyboardEvent && event.key !== "Escape") return;
+      if (event instanceof MouseEvent && menuRef.current?.contains(event.target as Node)) return;
+      setMenuOpen(false);
+    }
+    window.addEventListener("pointerdown", handleDismiss);
+    window.addEventListener("keydown", handleDismiss);
+    return () => {
+      window.removeEventListener("pointerdown", handleDismiss);
+      window.removeEventListener("keydown", handleDismiss);
+    };
+  }, [menuOpen]);
+
+  async function toggleArchive() {
+    if (!plan || planActionBusy) return;
+    setMenuOpen(false);
+    setPlanActionBusy(true);
+    setError("");
+    try {
+      setPlan(await archivePlan(plan, { temporary: viewer.isGuest }));
+    } catch (reason) {
+      setError(asErrorMessage(reason));
+    } finally {
+      setPlanActionBusy(false);
+    }
+  }
+
+  async function removePlan() {
+    if (!plan || planActionBusy) return;
+    if (!window.confirm("Delete this plan permanently?")) return;
+    setMenuOpen(false);
+    setPlanActionBusy(true);
+    setError("");
+    try {
+      await deletePlan(plan.id, { temporary: viewer.isGuest });
+      router.push(viewer.isGuest ? "/" : "/plans");
+    } catch (reason) {
+      setError(asErrorMessage(reason));
+      setPlanActionBusy(false);
+    }
+  }
+
   if (loading) {
     return <main className="planner page-shell app-shell"><div className="planner-loading"><LoaderCircle className="spin" /><span>Opening your plan…</span></div></main>;
   }
@@ -385,7 +439,19 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
       {error && <div className="error-card floating-message" role="alert">{error}<button onClick={() => setError("")}>×</button></div>}
 
       <section className="planner-hero">
-        <div className="planner-title"><h1>{plan.title}</h1><p>{plan.summary}</p></div>
+        <div className="planner-title">
+          <h1>{plan.title}{plan.status === "archived" && <span className="plan-status-chip">Archived</span>}</h1>
+          <p>{plan.summary}</p>
+        </div>
+        <div className="card-menu-wrap" ref={menuRef}>
+          <button className="icon-button" onClick={() => setMenuOpen((open) => !open)} disabled={planActionBusy} aria-label="Plan actions" aria-expanded={menuOpen}><MoreHorizontal size={19} /></button>
+          {menuOpen && (
+            <div className="card-menu">
+              {!viewer.isGuest && <button onClick={() => void toggleArchive()}><Archive size={15} />{plan.status === "active" ? "Archive" : "Restore"}</button>}
+              <button className="danger" onClick={() => void removePlan()}><Trash2 size={15} />Delete</button>
+            </div>
+          )}
+        </div>
       </section>
 
       <section className="plan-overview">
