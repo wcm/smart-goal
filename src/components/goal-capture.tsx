@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, LoaderCircle } from "lucide-react";
+import { ArrowUpRight, LoaderCircle, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { GoalInputIcon } from "@/components/goal-input-icon";
@@ -135,25 +135,43 @@ export function GoalCapture({ showSuggestions = false, id }: { showSuggestions?:
       )}
       <div className="goal-input-wrap">
         <span className="goal-field-mark"><GoalInputIcon /></span>
-        <input
-          ref={inputRef}
-          value={goal}
-          onChange={(event) => {
-            setGoal(event.target.value);
-            setIsAutoGoal(!event.target.value.trim());
-          }}
-          onFocus={() => {
-            setFocused(true);
-            if (isAutoGoal) setGoal(autoGoalTargetRef.current);
-          }}
-          onBlur={() => setFocused(false)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") void submit();
-          }}
-          placeholder="I want to launch my first newsletter…"
-          aria-label="What is your goal?"
-          maxLength={1200}
-        />
+        <span className="goal-field-input">
+          <input
+            ref={inputRef}
+            value={goal}
+            onChange={(event) => {
+              setGoal(event.target.value);
+              setIsAutoGoal(!event.target.value.trim());
+            }}
+            onFocus={() => {
+              setFocused(true);
+              if (isAutoGoal) setGoal(autoGoalTargetRef.current);
+            }}
+            onBlur={() => setFocused(false)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") void submit();
+            }}
+            placeholder="I want to launch my first newsletter…"
+            aria-label="What is your goal?"
+            maxLength={1200}
+          />
+          {focused && goal.trim() && (
+            <button
+              type="button"
+              className="goal-clear-button"
+              aria-label="Clear goal"
+              title="Clear"
+              onPointerDown={(event) => event.preventDefault()}
+              onClick={() => {
+                setGoal("");
+                setIsAutoGoal(false);
+                inputRef.current?.focus();
+              }}
+            >
+              <X size={14} />
+            </button>
+          )}
+        </span>
         <Button size="lg" onClick={() => void submit()} aria-busy={submitting}>
           {submitting ? "Making it SMART…" : "Make it SMART"}
           {submitting ? <LoaderCircle className="spin" size={18} /> : <ArrowUpRight size={18} />}

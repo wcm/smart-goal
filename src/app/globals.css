@@ -172,7 +172,11 @@ textarea:focus-visible,
 }
 .goal-field-mark { width: 22px; height: 22px; margin-right: 5px; display: grid; place-items: center; flex: 0 0 auto; color: #555a63; }
 .goal-field-mark svg { color: currentColor; }
-.goal-input-wrap input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 17px; }
+.goal-field-input { min-width: 0; display: grid; align-items: center; position: relative; }
+.goal-input-wrap input { width: 100%; padding-right: 34px; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 17px; }
+.goal-clear-button { width: 26px; height: 26px; display: grid; place-items: center; position: absolute; top: 50%; right: 4px; transform: translateY(-50%); border: 0; border-radius: 50%; color: #6b6f78; background: var(--surface-soft); cursor: pointer; transition: color .16s ease, background .16s ease; }
+.goal-clear-button::after { content: ""; position: absolute; inset: -9px; border-radius: 50%; }
+.goal-clear-button:hover, .goal-clear-button:focus-visible { color: var(--ink); background: #e1e2e6; }
 .goal-input-wrap input::placeholder { color: #858994; }
 .goal-input-wrap .button { min-width: 194px; }
 .goal-capture-error { margin: 12px 18px 0; color: var(--danger); font-size: 12px; line-height: 1.5; text-align: left; }
@@ -332,6 +336,8 @@ textarea:focus-visible,
 .closing-cta .goal-input-wrap input { color: #fff; }
 .closing-cta .goal-input-wrap input::placeholder { color: #a9abb2; }
 .closing-cta .goal-field-mark { color: #d5d7dc; }
+.closing-cta .goal-clear-button { color: #d5d7dc; background: rgb(255 255 255 / 16%); }
+.closing-cta .goal-clear-button:hover, .closing-cta .goal-clear-button:focus-visible { color: #fff; background: rgb(255 255 255 / 26%); }
 .closing-cta .button-primary { color: var(--ink); background: #fff; }
 .marketing-footer { color: var(--muted); font-size: 12px; }
 .marketing-footer > .page-shell { min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
