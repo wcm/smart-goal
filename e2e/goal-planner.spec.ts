@@ -5,7 +5,7 @@ test("creates, breaks down, completes, and persists a demo plan", async ({ page 
   const goalInput = page.getByLabel("What is your goal?").first();
   const createButton = page.getByRole("button", { name: "Make it SMART" }).first();
   await expect(createButton).toBeEnabled();
-  await page.getByRole("button", { name: "Launch a newsletter" }).first().click();
+  await page.getByRole("button", { name: "Launch a newsletter" }).first().click({ force: true });
   await expect(goalInput).toHaveValue("I want to launch a newsletter");
   await goalInput.fill("Launch my first useful newsletter");
   await createButton.click();

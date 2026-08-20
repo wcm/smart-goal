@@ -60,12 +60,12 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-LEGAL_CONTACT_EMAIL=contact@goal-planner.com
+LEGAL_CONTACT_EMAIL=contact@smart-goal.ai
 ```
 
 `OPENAI_API_KEY` is read only in server route handlers. The application does not need a Supabase service-role key at runtime.
 
-`LEGAL_CONTACT_EMAIL` is not a secret. It is displayed as the contact link on the Terms and Privacy pages and defaults to `contact@goal-planner.com`.
+`LEGAL_CONTACT_EMAIL` is not a secret. It is displayed as the contact link on the Terms and Privacy pages and defaults to `contact@smart-goal.ai`.
 
 ## Connect Supabase
 
