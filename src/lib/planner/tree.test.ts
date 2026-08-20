@@ -4,7 +4,9 @@ import {
   createStepRecords,
   formatMinutes,
   normalizeChildEstimates,
+  parseMinutesInput,
   replaceStepChildren,
+  sanitizeMinutesInput,
   setStepCompletion,
 } from "@/lib/planner/tree";
 import type { PlanRecord, StepRecord } from "@/lib/planner/types";
@@ -65,18 +67,98 @@ describe("normalizeChildEstimates", () => {
     expect(result.every((item) => item.estimatedMinutes > 0)).toBe(true);
   });
 
-  it.each([1, 0])("uses the sub-minute sentinel when breaking down a %i-minute step", (minutes) => {
+  it("keeps every child sub-minute when the parent is sub-minute", () => {
+    const result = normalizeChildEstimates(
+      Array.from({ length: 5 }, (_, index) => ({
+        title: `Step ${index + 1}`,
+        description: "",
+        estimatedMinutes: 1,
+      })),
+      0,
+    );
+
+    expect(result).toHaveLength(5);
+    expect(result.every((item) => item.estimatedMinutes === 0)).toBe(true);
+    expect(result.every((item) => formatMinutes(item.estimatedMinutes) === "<1m")).toBe(true);
+  });
+
+  it("spends a single parent minute on one child and leaves the rest sub-minute", () => {
     const result = normalizeChildEstimates(
       [
         { title: "One", description: "", estimatedMinutes: 1 },
         { title: "Two", description: "", estimatedMinutes: 1 },
+        { title: "Three", description: "", estimatedMinutes: 1 },
       ],
-      minutes,
+      1,
     );
 
-    expect(result).toHaveLength(2);
-    expect(result.every((item) => item.estimatedMinutes === 0)).toBe(true);
-    expect(result.every((item) => formatMinutes(item.estimatedMinutes) === "<1m")).toBe(true);
+    expect(result.map((item) => item.estimatedMinutes)).toEqual([1, 0, 0]);
+  });
+
+  it("keeps the child count independent of the parent's minutes", () => {
+    const result = normalizeChildEstimates(
+      Array.from({ length: 5 }, (_, index) => ({
+        title: `Step ${index + 1}`,
+        description: "",
+        estimatedMinutes: 1,
+      })),
+      2,
+    );
+
+    expect(result).toHaveLength(5);
+    expect(result.map((item) => item.estimatedMinutes)).toEqual([1, 1, 0, 0, 0]);
+  });
+
+  it("follows the generated weights when the parent has few minutes", () => {
+    const result = normalizeChildEstimates(
+      [
+        { title: "One", description: "", estimatedMinutes: 1 },
+        { title: "Two", description: "", estimatedMinutes: 3 },
+        { title: "Three", description: "", estimatedMinutes: 1 },
+      ],
+      3,
+    );
+
+    expect(result.map((item) => item.estimatedMinutes)).toEqual([1, 2, 0]);
+  });
+
+  it("honours a generated sub-minute estimate", () => {
+    const result = normalizeChildEstimates(
+      [
+        { title: "One", description: "", estimatedMinutes: 5 },
+        { title: "Two", description: "", estimatedMinutes: 0 },
+      ],
+      5,
+    );
+
+    expect(result.map((item) => item.estimatedMinutes)).toEqual([5, 0]);
+  });
+
+  it("spreads evenly when every generated estimate is sub-minute", () => {
+    const result = normalizeChildEstimates(
+      Array.from({ length: 4 }, (_, index) => ({
+        title: `Step ${index + 1}`,
+        description: "",
+        estimatedMinutes: 0,
+      })),
+      4,
+    );
+
+    expect(result.map((item) => item.estimatedMinutes)).toEqual([1, 1, 1, 1]);
+  });
+
+  it("keeps at most eight children", () => {
+    const result = normalizeChildEstimates(
+      Array.from({ length: 11 }, (_, index) => ({
+        title: `Step ${index + 1}`,
+        description: "",
+        estimatedMinutes: 2,
+      })),
+      12,
+    );
+
+    expect(result).toHaveLength(8);
+    expect(result.reduce((sum, item) => sum + item.estimatedMinutes, 0)).toBe(12);
   });
 });
 
@@ -180,5 +262,46 @@ describe("regeneration", () => {
         generationId: "generation-2",
       }),
     ).toThrow("between levels 1 and 10");
+  });
+});
+
+describe("minutes input", () => {
+  it.each([
+    ["45", "45"],
+    ["4 5", "45"],
+    ["12.5", "125"],
+    ["-5", "5"],
+    ["30m", "30"],
+    ["90 minutes", "90"],
+    ["12345678", "1234567"],
+    ["<", "<"],
+    ["<1", "<1"],
+    ["< 1", "<1"],
+    ["<1m", "<1"],
+    ["<9", "<"],
+    ["", ""],
+  ])("masks %j down to %j", (typed, expected) => {
+    expect(sanitizeMinutesInput(typed)).toBe(expected);
+  });
+
+  it.each([
+    ["45", 45],
+    ["1", 1],
+    ["0", 0],
+    ["<1", 0],
+    ["9999999", 525600],
+  ])("reads %j as %i minutes", (entry, expected) => {
+    expect(parseMinutesInput(entry)).toBe(expected);
+  });
+
+  it.each(["", " ", "<", "<1m", "12.5", "-5", "1e3", "abc", "1,5"])(
+    "rejects %j",
+    (entry) => {
+      expect(parseMinutesInput(entry)).toBeNull();
+    },
+  );
+
+  it("round-trips the sub-minute sentinel", () => {
+    expect(formatMinutes(parseMinutesInput("<1") ?? 1)).toBe("<1m");
   });
 });

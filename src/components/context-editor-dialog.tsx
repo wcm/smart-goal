@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, LoaderCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { parseMinutesInput, sanitizeMinutesInput } from "@/lib/planner/tree";
 import type { StepRecord } from "@/lib/planner/types";
 
 export type StepEditorValues = {
@@ -56,7 +57,7 @@ function PlanContextEditorContent({
     <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => {
       if (event.currentTarget === event.target && !busy) onClose();
     }}>
-      <form className="context-dialog edit-context-dialog" role="dialog" aria-modal="true" aria-labelledby="plan-context-editor-title" onSubmit={(event) => {
+      <form className="context-dialog edit-context-dialog plan-context-dialog" role="dialog" aria-modal="true" aria-labelledby="plan-context-editor-title" onSubmit={(event) => {
         event.preventDefault();
         onSave(context.split("\n").map((line) => line.trim()).filter(Boolean));
       }}>
@@ -71,7 +72,7 @@ function PlanContextEditorContent({
             onChange={(event) => setContext(event.target.value)}
             placeholder="Add one constraint, preference, or important detail per line…"
             maxLength={12000}
-            rows={8}
+            rows={18}
             autoFocus
           />
           <small>Use one line for each detail. This context will be used when breaking steps down.</small>
@@ -141,24 +142,22 @@ function StepEditorContent({
   const [confirmRefresh, setConfirmRefresh] = useState(false);
   const [pendingAction, setPendingAction] = useState<StepEditorAction | "save" | null>(null);
 
+  const parsedMinutes = parseMinutesInput(estimatedMinutes);
+  const missingTitle = !title.trim();
+  const missingDescription = !description.trim();
+  const blocked = busy || missingTitle || missingDescription || parsedMinutes === null;
+
   function values(): StepEditorValues {
-    const normalizedMinutes = estimatedMinutes.trim().toLowerCase().replaceAll(" ", "");
-    const parsedMinutes = normalizedMinutes === "<1" || normalizedMinutes === "<1m" || normalizedMinutes === "<1min"
-      ? 0
-      : Number(normalizedMinutes);
-    const validMinutes = Number.isFinite(parsedMinutes) && parsedMinutes >= 0
-      ? parsedMinutes
-      : step.estimatedMinutes;
     return {
       title: title.trim() || step.title,
       description: description.trim(),
-      estimatedMinutes: Math.min(525600, Math.max(0, Math.round(validMinutes))),
+      estimatedMinutes: parsedMinutes ?? step.estimatedMinutes,
       context: context.trim(),
     };
   }
 
   function saveAndClose(action?: StepEditorAction) {
-    if (busy) return;
+    if (blocked) return;
     setPendingAction(action ?? "save");
     onSave(values(), action);
   }
@@ -187,16 +186,19 @@ function StepEditorContent({
         </div>
         <div className="edit-context-fields">
           <label className="edit-context-field">
-            <span>Step title</span>
-            <input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={500} autoFocus required />
+            <span>Title</span>
+            <input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={500} autoFocus required aria-invalid={missingTitle} />
+            {missingTitle && <small className="form-error">Add a step title.</small>}
           </label>
           <label className="edit-context-field">
             <span>Description</span>
-            <textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={2000} rows={4} />
+            <textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={2000} rows={4} required aria-invalid={missingDescription} />
+            {missingDescription && <small className="form-error">Add a description.</small>}
           </label>
           <label className="edit-context-field edit-time-field">
             <span>Estimated time</span>
-            <span><input type="text" inputMode="decimal" value={estimatedMinutes} onChange={(event) => setEstimatedMinutes(event.target.value)} maxLength={7} required /><small>minutes</small></span>
+            <span><input type="text" inputMode="numeric" value={estimatedMinutes} onChange={(event) => setEstimatedMinutes(sanitizeMinutesInput(event.target.value))} maxLength={7} required aria-invalid={parsedMinutes === null} /><p>minutes</p></span>
+            {parsedMinutes === null && <small className="form-error">Whole minutes, or “&lt;1”.</small>}
           </label>
           <label className="edit-context-field">
             <span>Context</span>
@@ -217,7 +219,7 @@ function StepEditorContent({
               <div><strong>Replace all sub-tasks?</strong><p>Their titles, descriptions, context, and completion progress will all be updated.</p></div>
               <div>
                 <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmRefresh(false)} disabled={busy}>Not now</Button>
-                <Button type="button" size="sm" onClick={() => saveAndClose("regenerate")} disabled={busy}>
+                <Button type="button" size="sm" onClick={() => saveAndClose("regenerate")} disabled={blocked}>
                   {busy && pendingAction === "regenerate" && <LoaderCircle className="spin" size={15} />}
                   {busy && pendingAction === "regenerate" ? "Saving…" : "Confirm"}
                 </Button>
@@ -225,7 +227,7 @@ function StepEditorContent({
             </div>
           ) : (
             <div className="step-editor-actions">
-              <Button type="button" variant="secondary" size="sm" onClick={() => saveAndClose()} disabled={busy}>
+              <Button type="button" variant="secondary" size="sm" onClick={() => saveAndClose()} disabled={blocked}>
                 {busy && pendingAction === "save" && <LoaderCircle className="spin" size={15} />}
                 {busy && pendingAction === "save" ? "Saving…" : "Save"}
               </Button>
@@ -234,7 +236,7 @@ function StepEditorContent({
                   type="button"
                   size="sm"
                   onClick={() => hasChildren ? setConfirmRefresh(true) : saveAndClose("breakdown")}
-                  disabled={busy}
+                  disabled={blocked}
                 >
                   {busy && pendingAction === "breakdown" && <LoaderCircle className="spin" size={15} />}
                   {busy && pendingAction === "breakdown" ? "Saving…" : hasChildren ? "Save & Refresh sub-tasks" : "Save & Break it down"}

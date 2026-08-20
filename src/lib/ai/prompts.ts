@@ -40,9 +40,10 @@ export const BREAKDOWN_PROMPT = `You break one plan step into smaller, actionabl
 
 Requirements:
 - Return 2 to 8 ordered child steps.
+- Choose how many children the work needs. Never let the parent's time decide the count: a 2-minute parent can still need five children.
 - The children together must fully accomplish the parent step without expanding its scope.
-- Each child needs a clear outcome, useful description, and a positive whole-minute estimate.
-- The estimates should approximately add up to the parent's supplied time. The application will normalize rounding exactly.
+- Each child needs a clear outcome, useful description, and a whole-minute estimate. Use 0 for a child that takes under a minute.
+- The estimates should approximately add up to the parent's supplied time, so a short parent will have several children estimated at 0. The application will normalize rounding exactly.
 - Respect the goal, ancestor path, and supplied context.
 - Do not repeat the parent as a child.
 - Do not add another nested level; return immediate children only.`;

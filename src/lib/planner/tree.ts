@@ -65,6 +65,9 @@ export function calculatePlanProgress(plan: PlanRecord) {
   };
 }
 
+const MAX_STEP_MINUTES = 525600;
+const MAX_BREAKDOWN_CHILDREN = 8;
+
 export function formatMinutes(totalMinutes: number) {
   if (totalMinutes === 0) return "<1m";
   const minutes = Math.max(0, Math.round(totalMinutes));
@@ -76,6 +79,19 @@ export function formatMinutes(totalMinutes: number) {
   return `${hours}h ${remainder}m`;
 }
 
+export function sanitizeMinutesInput(value: string) {
+  const compact = value.replace(/\s/g, "");
+  if (compact.startsWith("<")) return compact.startsWith("<1") ? "<1" : "<";
+  return compact.replace(/\D/g, "").slice(0, 7);
+}
+
+export function parseMinutesInput(value: string) {
+  const compact = value.replace(/\s/g, "");
+  if (compact === "<1") return 0;
+  if (!/^\d{1,7}$/.test(compact)) return null;
+  return Math.min(MAX_STEP_MINUTES, Number(compact));
+}
+
 export function normalizeChildEstimates(
   generated: GeneratedStep[],
   targetMinutes: number,
@@ -83,28 +99,17 @@ export function normalizeChildEstimates(
   const total = Math.max(0, Math.round(targetMinutes));
   const usable = generated
     .filter((step) => step.title.trim())
-    .slice(0, Math.min(8, Math.max(2, total)));
+    .slice(0, MAX_BREAKDOWN_CHILDREN);
 
   if (usable.length < 2) {
     throw new Error("A breakdown needs at least two useful steps.");
   }
 
-  if (total <= 1) {
-    return usable.map((step) => ({
-      ...step,
-      title: step.title.trim(),
-      description: step.description.trim(),
-      estimatedMinutes: 0,
-    }));
-  }
-  const baseline = usable.length;
-  const distributable = total - baseline;
-  const weights = usable.map((step) => Math.max(1, step.estimatedMinutes));
+  const proposed = usable.map((step) => Math.max(0, Math.round(step.estimatedMinutes)));
+  const weights = proposed.some((minutes) => minutes > 0) ? proposed : usable.map(() => 1);
   const weightTotal = weights.reduce((sum, weight) => sum + weight, 0);
-  const rawShares = weights.map(
-    (weight) => (weight / weightTotal) * distributable,
-  );
-  const allocations = rawShares.map((share) => Math.floor(share) + 1);
+  const rawShares = weights.map((weight) => (weight / weightTotal) * total);
+  const allocations = rawShares.map((share) => Math.floor(share));
   let remainder = total - allocations.reduce((sum, value) => sum + value, 0);
 
   const fractionalOrder = rawShares

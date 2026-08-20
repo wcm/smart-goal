@@ -3,7 +3,7 @@ import { z } from "zod";
 export const GeneratedStepSchema = z.object({
   title: z.string(),
   description: z.string(),
-  estimatedMinutes: z.number().int().positive(),
+  estimatedMinutes: z.number().int().nonnegative(),
 });
 
 export const GeneratedPlanSchema = z.object({

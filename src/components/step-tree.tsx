@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Check,
   ChevronDown,
@@ -64,15 +64,27 @@ function StepCard({
   isGuest: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
   const hasChildren = node.children.length > 0;
   const atLimit = node.depth >= MAX_STEP_DEPTH;
   const atGuestLimit = isGuest && node.depth >= GUEST_MAX_STEP_DEPTH && !atLimit;
   const busy = busyTarget === node.id;
 
+  useEffect(() => {
+    if (!celebrating) return;
+    const timer = window.setTimeout(() => setCelebrating(false), 900);
+    return () => window.clearTimeout(timer);
+  }, [celebrating]);
+
+  function toggleCompletion() {
+    if (!node.isCompleted) setCelebrating(true);
+    onToggle(node, !node.isCompleted);
+  }
+
   return (
     <article className={`step-branch depth-${Math.min(node.depth, 4)} ${node.isCompleted ? "completed" : ""}`}>
       <div
-        className={`step-card ${hasChildren ? "is-collapsible" : ""}`}
+        className={`step-card ${hasChildren ? "is-collapsible" : ""} ${celebrating ? "is-celebrating" : ""}`}
         onClick={(event) => {
           if (busy || !hasChildren || (event.target as HTMLElement).closest("button, a, input, textarea, select")) return;
           setCollapsed((value) => !value);
@@ -84,6 +96,7 @@ function StepCard({
               className="collapse-button"
               onClick={() => setCollapsed((value) => !value)}
               aria-label={collapsed ? "Expand child steps" : "Collapse child steps"}
+              aria-expanded={!collapsed}
             >
               {collapsed ? <ChevronRight size={17} /> : <ChevronDown size={17} />}
             </button>
@@ -115,7 +128,7 @@ function StepCard({
                   variant="secondary"
                   size="sm"
                   className={`step-done-button ${node.isCompleted ? "is-done" : ""}`}
-                  onClick={() => onToggle(node, !node.isCompleted)}
+                  onClick={toggleCompletion}
                   disabled={Boolean(busyTarget)}
                   aria-label={`${node.isCompleted ? "Mark incomplete" : "Mark as done"}: ${node.title}`}
                   aria-pressed={node.isCompleted}
@@ -127,9 +140,10 @@ function StepCard({
           </div>
         </div>
         <button className="step-edit-button" onClick={() => onEdit(node)} disabled={Boolean(busyTarget)} aria-label={`Edit ${node.title}`} title="Edit step"><Pencil size={16} /></button>
+        {celebrating && <span className="step-celebration" aria-hidden="true">{Array.from({ length: 12 }, (_, piece) => <i key={piece} />)}</span>}
       </div>
-      {hasChildren && !collapsed && !busy && (
-        <div className="step-children">
+      {hasChildren && (
+        <div className={`step-children ${collapsed || busy ? "is-collapsed" : ""}`} inert={collapsed || busy}>
           <StepTree nodes={node.children} busyTarget={busyTarget} onToggle={onToggle} onBreakdown={onBreakdown} onEdit={onEdit} isGuest={isGuest} />
         </div>
       )}
