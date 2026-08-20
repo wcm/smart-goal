@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { notFound } from "next/navigation";
+import { GoalMarkIcon } from "@/components/goal-mark-icon";
 import { PageBackLink } from "@/components/page-back-link";
 import { TipCover, TipDiagram } from "@/components/tip-visuals";
 import { getTipArticle, tipArticles } from "@/lib/tips";
@@ -51,13 +52,20 @@ export default async function TipArticlePage({ params }: ArticlePageProps) {
     datePublished: article.publishedAt,
     dateModified: article.updatedAt,
     mainEntityOfPage: `${appUrl}/tips/${article.slug}`,
-    author: { "@type": "Organization", name: "Goal Planner" },
-    publisher: { "@type": "Organization", name: "Goal Planner" },
+    author: { "@type": "Organization", name: "SMART Goal" },
+    publisher: { "@type": "Organization", name: "SMART Goal" },
     keywords: article.keywords.join(", "),
   };
 
   return (
-    <main className="tip-article-page app-shell">
+    <main className="tip-article-page has-tip-banner app-shell">
+      <aside className="guest-plan-banner tip-build-banner">
+        <div>
+          <GoalMarkIcon size={22} />
+          <span><strong>Build your SMART goal and action plan in minutes</strong><small>Let AI clarify your goal and turn it into practical, editable steps.</small></span>
+        </div>
+        <Link className="button button-primary" href="/">Build my SMART goal</Link>
+      </aside>
       <div className="page-back-row page-shell"><PageBackLink href="/tips">All tips</PageBackLink></div>
       <article>
         <div className="tip-article-header page-shell">
@@ -94,11 +102,17 @@ export default async function TipArticlePage({ params }: ArticlePageProps) {
             </section>
           ))}
 
-          <aside className="tip-product-cta">
-            <span>Put it into practice</span>
-            <h2>Turn your goal into a clear plan.</h2>
-            <Link className="button button-primary" href="/">Build my plan <ArrowRight size={17} /></Link>
-          </aside>
+          {article.sources.length > 0 && (
+            <section className="tip-sources" aria-labelledby="tip-sources-heading">
+              <h2 id="tip-sources-heading">Sources and further reading</h2>
+              <ul>
+                {article.sources.map((source) => (
+                  <li key={source.href}><a href={source.href} target="_blank" rel="noreferrer">{source.label}</a></li>
+                ))}
+              </ul>
+            </section>
+          )}
+
         </div>
       </article>
 

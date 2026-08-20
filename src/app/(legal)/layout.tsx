@@ -11,7 +11,7 @@ export default async function LegalLayout({ children }: { children: React.ReactN
       {children}
       <footer className="legal-footer">
         <div className="page-shell">
-          <span>© {new Date().getFullYear()} Goal Planner</span>
+          <span>© {new Date().getFullYear()} SMART Goal</span>
           <nav aria-label="Legal"><Link href="/terms">Terms &amp; Conditions</Link><Link href="/privacy">Privacy Policy</Link></nav>
         </div>
       </footer>

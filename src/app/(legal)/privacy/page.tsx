@@ -4,7 +4,7 @@ import { LegalContactLink, LegalDocument, type LegalSection } from "@/components
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How Goal Planner collects, uses, shares, and protects personal information.",
+  description: "How SMART Goal collects, uses, shares, and protects personal information.",
   alternates: { canonical: "/privacy" },
 };
 
@@ -12,7 +12,7 @@ const sections: LegalSection[] = [
   {
     id: "overview",
     title: "Overview",
-    content: <><p>This Privacy Policy explains how Goal Planner (“we,” “us,” or “our”) collects, uses, discloses, and protects personal information when you use the Goal Planner website, applications, and related services (the “Service”).</p><p>By using the Service, you acknowledge this Policy. If you do not agree, do not provide personal information through the Service.</p></>,
+    content: <><p>This Privacy Policy explains how SMART Goal (“we,” “us,” or “our”) collects, uses, discloses, and protects personal information when you use the SMART Goal website, applications, and related services (the “Service”).</p><p>By using the Service, you acknowledge this Policy. If you do not agree, do not provide personal information through the Service.</p></>,
   },
   {
     id: "information-we-collect",
@@ -27,12 +27,12 @@ const sections: LegalSection[] = [
   {
     id: "how-we-use-information",
     title: "How we use information",
-    content: <><p>We use personal information to:</p><ul><li>authenticate users and maintain accounts;</li><li>create, store, display, update, archive, and delete plans;</li><li>generate clarification questions, plans, step breakdowns, and estimates;</li><li>calculate completion progress and streak activity;</li><li>enforce usage limits and protect the Service from abuse;</li><li>diagnose errors, maintain security, and improve reliability;</li><li>respond to requests and communicate material service or policy changes; and</li><li>comply with law and protect users, Goal Planner, and third parties.</li></ul><p>Where applicable law requires a legal basis, we rely on performance of our agreement with you to provide the Service, our legitimate interests in securing and improving it, consent where specifically requested, and compliance with legal obligations.</p></>,
+    content: <><p>We use personal information to:</p><ul><li>authenticate users and maintain accounts;</li><li>create, store, display, update, archive, and delete plans;</li><li>generate SMART goal drafts, clarification questions, plans, step breakdowns, and estimates;</li><li>calculate completion progress and streak activity;</li><li>enforce usage limits and protect the Service from abuse;</li><li>diagnose errors, maintain security, and improve reliability;</li><li>respond to requests and communicate material service or policy changes; and</li><li>comply with law and protect users, SMART Goal, and third parties.</li></ul><p>Where applicable law requires a legal basis, we rely on performance of our agreement with you to provide the Service, our legitimate interests in securing and improving it, consent where specifically requested, and compliance with legal obligations.</p></>,
   },
   {
     id: "ai-processing",
     title: "How AI processing works",
-    content: <><p>When you request a plan, questions, or a step breakdown, relevant goal content is sent to OpenAI for processing. Depending on the feature, this may include your goal, plan summary, step title and description, ancestor steps, time estimate, and answers to context questions. We also send a privacy-preserving hashed safety identifier used for abuse prevention.</p><p>Goal Planner configures OpenAI Responses API requests with <code>store: false</code>, so it does not ask OpenAI to store response application state for later use. Under OpenAI’s standard API controls, prompts and responses are not used to train OpenAI models unless the API account owner explicitly opts in. OpenAI may retain abuse-monitoring logs containing customer content for up to 30 days unless different approved retention controls or a legal requirement apply.</p><p>AI output is returned to Goal Planner and becomes part of your saved plan when you choose to create or update it. Do not include sensitive information that is unnecessary for the planning request.</p></>,
+    content: <><p>When you request a SMART goal draft, plan, questions, or step breakdown, relevant goal content is sent to OpenAI for processing. Depending on the feature, this may include your starting goal, edited SMART fields, plan summary, step title and description, ancestor steps, time estimate, and answers to context questions. We also send a privacy-preserving hashed safety identifier used for abuse prevention.</p><p>SMART Goal configures OpenAI Responses API requests with <code>store: false</code>, so it does not ask OpenAI to store response application state for later use. Under OpenAI’s standard API controls, prompts and responses are not used to train OpenAI models unless the API account owner explicitly opts in. OpenAI may retain abuse-monitoring logs containing customer content for up to 30 days unless different approved retention controls or a legal requirement apply.</p><p>AI output is returned to SMART Goal and becomes part of your saved plan when you choose to create or update it. Do not include sensitive information that is unnecessary for the planning request.</p></>,
   },
   {
     id: "sharing",
@@ -42,7 +42,7 @@ const sections: LegalSection[] = [
   {
     id: "cookies-and-storage",
     title: "Cookies and browser storage",
-    content: <><p>Temporary and registered accounts use cookies that are necessary to establish, refresh, and secure your Supabase authentication session. These cookies are not advertising cookies. A temporary plan is stored in the current tab’s session storage and is cleared when you return home, close the tab, or clear site data.</p><p>Goal Planner briefly uses browser local storage to carry a temporary plan through Google sign-in. The snapshot is removed after a successful import or when you return home. In developer demo mode, plans and completion activity also remain in local storage until you clear site data or the application removes them.</p></>,
+    content: <><p>Temporary and registered accounts use cookies that are necessary to establish, refresh, and secure your Supabase authentication session. These cookies are not advertising cookies. A temporary plan is stored in the current tab’s session storage and is cleared when you return home, close the tab, or clear site data.</p><p>SMART Goal briefly uses browser local storage to carry a temporary plan through Google sign-in. The snapshot is removed after a successful import or when you return home. In developer demo mode, plans and completion activity also remain in local storage until you clear site data or the application removes them.</p></>,
   },
   {
     id: "retention",
@@ -72,7 +72,7 @@ const sections: LegalSection[] = [
   {
     id: "automated-decisions",
     title: "Automated decision-making",
-    content: <><p>Goal Planner uses AI to suggest planning content, but it does not make decisions that produce legal or similarly significant effects about you. You choose whether to use, edit, complete, or disregard every suggested step.</p></>,
+    content: <><p>SMART Goal uses AI to suggest planning content, but it does not make decisions that produce legal or similarly significant effects about you. You choose whether to use, edit, complete, or disregard every suggested step.</p></>,
   },
   {
     id: "changes",
@@ -87,5 +87,5 @@ const sections: LegalSection[] = [
 ];
 
 export default function PrivacyPage() {
-  return <LegalDocument title="Privacy Policy" introduction="How Goal Planner handles account information, goal content, and AI-assisted planning data." sections={sections} />;
+  return <LegalDocument title="Privacy Policy" introduction="How SMART Goal handles account information, goal content, and AI-assisted planning data." sections={sections} />;
 }

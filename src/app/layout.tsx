@@ -16,26 +16,26 @@ const instrumentSans = Instrument_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
-  applicationName: "Goal Planner",
+  applicationName: "SMART Goal",
   title: {
-    default: "AI Goal Planner — Break Any Goal Into Achievable Steps",
-    template: "%s · Goal Planner",
+    default: "SMART Goal — Turn Any Goal Into a Clear, Achievable Plan",
+    template: "%s · SMART Goal",
   },
   description:
-    "Turn any goal into a realistic, time-estimated plan. Break big steps into achievable actions, track progress, and build momentum.",
+    "Use AI and the SMART framework to make any goal specific, measurable, achievable, relevant, and time-bound—then turn it into a practical plan.",
   openGraph: {
     type: "website",
-    siteName: "Goal Planner",
-    title: "AI Goal Planner — Break Any Goal Into Achievable Steps",
+    siteName: "SMART Goal",
+    title: "SMART Goal — Turn Any Goal Into a Clear, Achievable Plan",
     description:
-      "Turn any goal into a realistic, time-estimated plan and break it down until the next action feels easy.",
+      "Make your goal SMART, add your real-world context, and get a practical step-by-step plan.",
     url: appUrl,
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Goal Planner — Break Any Goal Into Achievable Steps",
+    title: "SMART Goal — Turn Any Goal Into a Clear, Achievable Plan",
     description:
-      "Turn any goal into a realistic, time-estimated plan and break it down until the next action feels easy.",
+      "Make your goal SMART, add your real-world context, and get a practical step-by-step plan.",
   },
 };
 
@@ -47,8 +47,8 @@ export default function RootLayout({
   const websiteJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Goal Planner",
-    alternateName: "Goal Planner AI",
+    name: "SMART Goal",
+    alternateName: "SMART Goal Planner",
     url: appUrl,
   };
 

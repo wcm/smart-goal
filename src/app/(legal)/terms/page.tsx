@@ -4,7 +4,7 @@ import { LegalContactLink, LegalDocument, type LegalSection } from "@/components
 
 export const metadata: Metadata = {
   title: "Terms & Conditions",
-  description: "The terms that govern access to and use of Goal Planner.",
+  description: "The terms that govern access to and use of SMART Goal.",
   alternates: { canonical: "/terms" },
 };
 
@@ -12,17 +12,17 @@ const sections: LegalSection[] = [
   {
     id: "agreement",
     title: "Agreement to these terms",
-    content: <><p>These Terms &amp; Conditions (“Terms”) govern your access to the Goal Planner website, applications, and related services (the “Service”). References to “Goal Planner,” “we,” “us,” or “our” mean the provider of the Service.</p><p>By accessing or using the Service, you agree to these Terms and acknowledge our <Link href="/privacy">Privacy Policy</Link>. If you do not agree, do not use the Service.</p></>,
+    content: <><p>These Terms &amp; Conditions (“Terms”) govern your access to the SMART Goal website, applications, and related services (the “Service”). References to “SMART Goal,” “we,” “us,” or “our” mean the provider of the Service.</p><p>By accessing or using the Service, you agree to these Terms and acknowledge our <Link href="/privacy">Privacy Policy</Link>. If you do not agree, do not use the Service.</p></>,
   },
   {
     id: "service",
-    title: "What Goal Planner provides",
-    content: <><p>Goal Planner helps you turn goals into structured plans, generate clarification questions, break work into smaller steps, estimate effort, and track completion and consistency. Some features use artificial intelligence to generate suggestions from the information you provide.</p><p>The Service is a planning and organizational tool. It does not complete tasks for you, guarantee that a goal is achievable, or promise any particular personal, professional, financial, health, educational, or other outcome.</p></>,
+    title: "What SMART Goal provides",
+    content: <><p>SMART Goal helps you refine goals using the Specific, Measurable, Achievable, Relevant, and Time-bound framework, turn them into structured plans, generate clarification questions, break work into smaller steps, estimate effort, and track completion and consistency. Some features use artificial intelligence to generate suggestions from the information you provide.</p><p>The Service is a planning and organizational tool. It does not complete tasks for you, guarantee that a goal is achievable, or promise any particular personal, professional, financial, health, educational, or other outcome.</p></>,
   },
   {
     id: "eligibility-and-accounts",
     title: "Eligibility and accounts",
-    content: <><p>You must be legally capable of entering into these Terms. The Service is not intended for children under 13. If the law where you live requires parental consent or a higher minimum age for online services, you may use the Service only when those requirements are met.</p><p>You may begin with a limited temporary account. Temporary plans exist only in the current browser tab and are cleared when you return home, close the tab, or clear site data unless you sign in to save first. Registered features require a Google-authenticated account. You are responsible for activity under your account, for keeping access to your Google account secure, and for promptly telling us if you believe your Goal Planner account has been accessed without permission.</p></>,
+    content: <><p>You must be legally capable of entering into these Terms. The Service is not intended for children under 13. If the law where you live requires parental consent or a higher minimum age for online services, you may use the Service only when those requirements are met.</p><p>You may begin with a limited temporary account. Temporary plans exist only in the current browser tab and are cleared when you return home, close the tab, or clear site data unless you sign in to save first. Registered features require a Google-authenticated account. You are responsible for activity under your account, for keeping access to your Google account secure, and for promptly telling us if you believe your SMART Goal account has been accessed without permission.</p></>,
   },
   {
     id: "your-content",
@@ -32,7 +32,7 @@ const sections: LegalSection[] = [
   {
     id: "ai-output",
     title: "AI-generated plans",
-    content: <><p>AI output may be incomplete, inaccurate, outdated, unsuitable, or unexpectedly similar to content produced for other users. Review every plan and estimate before relying on it. You are responsible for deciding whether an action is appropriate for your circumstances.</p><p>Goal Planner is not a substitute for qualified medical, legal, financial, mental-health, safety, or other professional advice. For decisions with material consequences, consult an appropriate professional and verify important information independently.</p></>,
+    content: <><p>AI output may be incomplete, inaccurate, outdated, unsuitable, or unexpectedly similar to content produced for other users. Review every plan and estimate before relying on it. You are responsible for deciding whether an action is appropriate for your circumstances.</p><p>SMART Goal is not a substitute for qualified medical, legal, financial, mental-health, safety, or other professional advice. For decisions with material consequences, consult an appropriate professional and verify important information independently.</p></>,
   },
   {
     id: "acceptable-use",
@@ -42,12 +42,12 @@ const sections: LegalSection[] = [
   {
     id: "third-parties",
     title: "Third-party services",
-    content: <><p>The Service relies on third parties, including Google for sign-in, Supabase for authentication and data storage, OpenAI for AI processing, and hosting or infrastructure providers. Your use of those services may also be governed by their terms and privacy notices.</p><p>We are not responsible for third-party products or websites that we do not control. Availability or changes in a third-party service may affect Goal Planner features.</p></>,
+    content: <><p>The Service relies on third parties, including Google for sign-in, Supabase for authentication and data storage, OpenAI for AI processing, and hosting or infrastructure providers. Your use of those services may also be governed by their terms and privacy notices.</p><p>We are not responsible for third-party products or websites that we do not control. Availability or changes in a third-party service may affect SMART Goal features.</p></>,
   },
   {
     id: "intellectual-property",
     title: "Our intellectual property",
-    content: <><p>Except for User Content, the Service—including its software, interface, branding, templates, and original editorial content—is owned by or licensed to Goal Planner and is protected by applicable intellectual-property laws.</p><p>These Terms give you a personal, limited, revocable, non-exclusive, non-transferable right to use the Service. They do not transfer ownership of the Service or permit you to copy, resell, sublicense, or create a competing service from protected parts of Goal Planner except where applicable law expressly allows it.</p></>,
+    content: <><p>Except for User Content, the Service—including its software, interface, branding, templates, and original editorial content—is owned by or licensed to SMART Goal and is protected by applicable intellectual-property laws.</p><p>These Terms give you a personal, limited, revocable, non-exclusive, non-transferable right to use the Service. They do not transfer ownership of the Service or permit you to copy, resell, sublicense, or create a competing service from protected parts of SMART Goal except where applicable law expressly allows it.</p></>,
   },
   {
     id: "availability",
@@ -57,7 +57,7 @@ const sections: LegalSection[] = [
   {
     id: "termination",
     title: "Ending use of the Service",
-    content: <><p>You may stop using Goal Planner at any time. You can delete individual plans in the Service and may request account deletion using the contact details below.</p><p>We may suspend or terminate access when you materially breach these Terms, create risk or legal exposure, misuse the Service, or when we discontinue the Service. Where practical and lawful, we will provide notice and an opportunity to export or remove your content.</p></>,
+    content: <><p>You may stop using SMART Goal at any time. You can delete individual plans in the Service and may request account deletion using the contact details below.</p><p>We may suspend or terminate access when you materially breach these Terms, create risk or legal exposure, misuse the Service, or when we discontinue the Service. Where practical and lawful, we will provide notice and an opportunity to export or remove your content.</p></>,
   },
   {
     id: "disclaimers",
@@ -67,7 +67,7 @@ const sections: LegalSection[] = [
   {
     id: "liability",
     title: "Limitation of liability",
-    content: <><p>To the maximum extent permitted by law, Goal Planner and its suppliers will not be liable for indirect, incidental, special, consequential, exemplary, or punitive damages, or for loss of profits, opportunities, goodwill, or data arising from your use of the Service.</p><p>Our total liability for claims relating to the Service will not exceed the greater of the amount you paid us for the Service during the 12 months before the event giving rise to the claim or US$100. These limits do not apply where liability cannot legally be limited, including where applicable for fraud, willful misconduct, or personal injury caused by negligence.</p></>,
+    content: <><p>To the maximum extent permitted by law, SMART Goal and its suppliers will not be liable for indirect, incidental, special, consequential, exemplary, or punitive damages, or for loss of profits, opportunities, goodwill, or data arising from your use of the Service.</p><p>Our total liability for claims relating to the Service will not exceed the greater of the amount you paid us for the Service during the 12 months before the event giving rise to the claim or US$100. These limits do not apply where liability cannot legally be limited, including where applicable for fraud, willful misconduct, or personal injury caused by negligence.</p></>,
   },
   {
     id: "disputes",
@@ -87,5 +87,5 @@ const sections: LegalSection[] = [
 ];
 
 export default function TermsPage() {
-  return <LegalDocument title="Terms & Conditions" introduction="The rules for using Goal Planner and its AI-assisted planning features." sections={sections} />;
+  return <LegalDocument title="Terms & Conditions" introduction="The rules for using SMART Goal and its AI-assisted planning features." sections={sections} />;
 }

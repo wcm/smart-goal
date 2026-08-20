@@ -30,7 +30,7 @@ export function TipCover({ article, compact = false }: { article: TipArticle; co
       viewBox="0 0 960 480"
       role="img"
       aria-labelledby={`${id}-title ${id}-description`}
-      preserveAspectRatio="xMidYMid slice"
+      preserveAspectRatio="xMidYMid meet"
     >
       <title id={`${id}-title`}>{article.coverLabel}</title>
       <desc id={`${id}-description`}>An abstract planning path connecting a goal to a series of achievable steps.</desc>

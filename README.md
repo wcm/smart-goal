@@ -1,6 +1,6 @@
-# Goal Planner
+# SMART Goal
 
-Goal Planner turns an ambitious goal into a practical, time-estimated plan. Users can add context, regenerate a plan, recursively break down any step to ten levels, track time-weighted progress, and build a daily completion streak.
+SMART Goal turns a rough ambition into an editable SMART goal and a practical, time-estimated plan. Users can add context, regenerate a plan, recursively break down any step to ten levels, track time-weighted progress, and build a daily completion streak.
 
 The repository is intentionally usable before external accounts are connected. With no Supabase or OpenAI credentials, it runs as a deterministic browser-local demo with the complete planning flow.
 
@@ -29,7 +29,7 @@ The detailed product and architecture specification lives in [IMPLEMENTATION_PLA
 ## Stack
 
 - Next.js 16 App Router, React 19, and TypeScript
-- Tailwind CSS 4 with a custom Goal Planner design system
+- Tailwind CSS 4 with a custom SMART Goal design system
 - Supabase Postgres and Auth
 - OpenAI Responses API with `gpt-5.6-terra` by default
 - Vitest, Testing Library, and Playwright

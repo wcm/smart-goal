@@ -6,9 +6,9 @@ import {
   ChevronDown,
   ChevronRight,
   GitBranchPlus,
-  Lightbulb,
   LoaderCircle,
   LockKeyhole,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GUEST_MAX_STEP_DEPTH, MAX_STEP_DEPTH } from "@/lib/config";
@@ -20,14 +20,14 @@ export function StepTree({
   busyTarget,
   onToggle,
   onBreakdown,
-  onAddContext,
+  onEdit,
   isGuest = false,
 }: {
   nodes: StepTreeNode[];
   busyTarget: string | null;
   onToggle: (step: StepRecord, completed: boolean) => void;
   onBreakdown: (step: StepRecord) => void;
-  onAddContext: (step: StepRecord) => void;
+  onEdit: (step: StepRecord) => void;
   isGuest?: boolean;
 }) {
   return (
@@ -40,7 +40,7 @@ export function StepTree({
           busyTarget={busyTarget}
           onToggle={onToggle}
           onBreakdown={onBreakdown}
-          onAddContext={onAddContext}
+          onEdit={onEdit}
           isGuest={isGuest}
         />
       ))}
@@ -54,7 +54,7 @@ function StepCard({
   busyTarget,
   onToggle,
   onBreakdown,
-  onAddContext,
+  onEdit,
   isGuest,
 }: {
   node: StepTreeNode;
@@ -62,7 +62,7 @@ function StepCard({
   busyTarget: string | null;
   onToggle: (step: StepRecord, completed: boolean) => void;
   onBreakdown: (step: StepRecord) => void;
-  onAddContext: (step: StepRecord) => void;
+  onEdit: (step: StepRecord) => void;
   isGuest: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -91,8 +91,9 @@ function StepCard({
           </button>
         </div>
         <div className="step-body">
-          <div className="step-title-row">
-            <h3>{node.title}</h3>
+          <h3>{node.title}</h3>
+          <div className="step-meta">
+            <span className="time-chip">{formatMinutes(node.estimatedMinutes)}</span>
             <span className="step-index" aria-label={`Level ${node.depth}, step ${index + 1}`}>
               <span className="step-depth-dots" aria-hidden="true">
                 {Array.from({ length: node.depth }, (_, dotIndex) => <i key={dotIndex} />)}
@@ -101,20 +102,19 @@ function StepCard({
             </span>
           </div>
           <p>{node.description}</p>
-          <div className="step-actions">
-            <span className="time-chip">{formatMinutes(node.estimatedMinutes)}</span>
-            <Button variant="ghost" size="sm" onClick={() => onAddContext(node)} disabled={Boolean(busyTarget)}><Lightbulb size={15} /> Add context</Button>
-            <Button variant="secondary" size="sm" onClick={() => onBreakdown(node)} disabled={Boolean(busyTarget) || atLimit || tooSmall} title={atLimit ? `Maximum depth of ${MAX_STEP_DEPTH} reached` : atGuestLimit ? "Sign in to unlock more levels" : undefined}>
+          {!hasChildren && <div className="step-actions">
+            <Button size="sm" onClick={() => onBreakdown(node)} disabled={Boolean(busyTarget) || atLimit || tooSmall} title={atLimit ? `Maximum depth of ${MAX_STEP_DEPTH} reached` : atGuestLimit ? "Sign in to unlock more levels" : undefined}>
               {busy ? <LoaderCircle className="spin" size={15} /> : atLimit || atGuestLimit ? <LockKeyhole size={15} /> : <GitBranchPlus size={15} />}
-              {busy ? "Working…" : atLimit ? "Depth limit" : atGuestLimit ? "Unlock next level" : hasChildren ? "Regenerate" : "Break it down"}
+              {busy ? "Working…" : atLimit ? "Depth limit" : atGuestLimit ? "Unlock next level" : "Break it down"}
             </Button>
-          </div>
+          </div>}
         </div>
+        <button className="step-edit-button" onClick={() => onEdit(node)} disabled={Boolean(busyTarget)} aria-label={`Edit ${node.title}`} title="Edit step"><Pencil size={16} /></button>
       </div>
       {hasChildren && !collapsed && (
         <div className="step-children">
           <span className="branch-line" aria-hidden="true" />
-          <StepTree nodes={node.children} busyTarget={busyTarget} onToggle={onToggle} onBreakdown={onBreakdown} onAddContext={onAddContext} isGuest={isGuest} />
+          <StepTree nodes={node.children} busyTarget={busyTarget} onToggle={onToggle} onBreakdown={onBreakdown} onEdit={onEdit} isGuest={isGuest} />
         </div>
       )}
     </article>

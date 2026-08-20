@@ -36,6 +36,270 @@ export type TipArticle = {
 
 export const tipArticles: TipArticle[] = [
   {
+    slug: "smart-action-plan-examples",
+    title: "SMART Action Plan Examples: 5 Goals With Clear Steps",
+    description: "See five complete SMART action plan examples for study, work, business, health, and learning, with measurable goals, sequenced steps, and review points.",
+    excerpt: "Five realistic SMART goals carried through into action plans—not just polished goal statements—with steps, timing, and checkpoints you can adapt.",
+    category: "SMART examples",
+    publishedAt: "2026-08-14",
+    updatedAt: "2026-08-14",
+    readingTime: "10 min read",
+    keywords: [
+      "SMART action plan examples",
+      "SMART goals action plan examples",
+      "SMART action plan sample",
+      "SMART plan example",
+      "SMART goal planning",
+      "actionable goals",
+    ],
+    coverLabel: "5 goals → 5 complete plans",
+    coverVariant: "coral",
+    sections: [
+      {
+        id: "goal-versus-plan",
+        heading: "A SMART goal is the finish line; the action plan is the route",
+        paragraphs: [
+          "A useful SMART action plan has two layers. The goal defines a specific, measurable, achievable, relevant, and time-bound result. The plan then names the work, order, effort, and review points needed to reach it. If you only write the goal, you may still be unsure what to do next. If you only list tasks, you may stay busy without knowing whether the work adds up to success.",
+          "The examples below cover a student, an employee, an entrepreneur, a health goal, and a learning goal. Each uses the same structure so you can compare the goal with the actions that make it executable.",
+        ],
+        bullets: [
+          "Goal: the result and evidence of completion.",
+          "Milestones: meaningful outcomes along the route.",
+          "Actions: clear tasks that produce the next milestone.",
+          "Capacity: the time, money, or support the plan can use.",
+          "Review point: a scheduled moment to adjust using real evidence.",
+        ],
+        template: "By [date], I will [observable result], measured by [evidence], because [reason]. I can use [capacity], and I will review progress every [interval].",
+      },
+      {
+        id: "student-example",
+        heading: "1. Student SMART action plan: finish a literature review",
+        paragraphs: [
+          "SMART goal: Within ten weeks, I will submit a 6,000-word literature review that synthesizes at least thirty relevant peer-reviewed sources and meets my supervisor’s agreed outline and citation requirements. I will protect six hours each week and request feedback at the outline and first-draft stages.",
+          "Why it is SMART: the deliverable and subject are specific; word count, source count, and supervisor criteria make it measurable; six weekly hours make the scope testable; it advances the student’s dissertation; and the ten-week deadline is clear.",
+        ],
+        steps: [
+          { title: "Week 1: Confirm the question and criteria", body: "Agree on the research question, chapter outline, source criteria, and feedback dates with the supervisor." },
+          { title: "Weeks 1–3: Build the evidence base", body: "Search, screen, and annotate at least thirty useful sources in a structured evidence table." },
+          { title: "Weeks 3–4: Produce the synthesis outline", body: "Group findings into themes, identify disagreements or gaps, and submit the outline for feedback." },
+          { title: "Weeks 5–8: Draft and revise", body: "Write one section at a time, then revise the complete draft against the agreed criteria." },
+          { title: "Weeks 9–10: Review and submit", body: "Apply supervisor feedback, verify citations, proofread, and submit before the deadline." },
+        ],
+        template: "Weekly review: sources screened, words drafted, next section, unresolved question, and hours remaining.",
+      },
+      {
+        id: "work-example",
+        heading: "2. Work SMART action plan: build a stronger portfolio",
+        paragraphs: [
+          "SMART goal: Within ten weeks, I will publish two product-design case studies that explain the problem, my decisions, and the outcome, then request structured feedback from six relevant hiring managers or senior designers. I will use four hours each week outside my current role.",
+          "This is more actionable than “improve my portfolio” because the finish line is published work plus completed feedback conversations. It also separates the work you control from the result you do not control: receiving a job offer.",
+        ],
+        steps: [
+          { title: "Choose two projects", body: "Select projects with clear constraints, meaningful personal contribution, and evidence of change." },
+          { title: "Create one shared case-study structure", body: "Define the sections, evidence, image list, and quality checklist before drafting either story." },
+          { title: "Publish case study one", body: "Draft, review with one trusted peer, revise, and publish by the end of week four." },
+          { title: "Publish case study two", body: "Reuse the structure, improve the weak points found in the first review, and publish by week eight." },
+          { title: "Run the feedback loop", body: "Contact six relevant reviewers, record their comments, and make one focused revision to each case study." },
+        ],
+        template: "Review at weeks 2, 4, 8, and 10: published evidence, feedback received, actual hours, and next revision.",
+      },
+      {
+        id: "business-example",
+        heading: "3. Entrepreneur SMART action plan: validate a paid workshop",
+        paragraphs: [
+          "SMART goal: Within twelve weeks, I will validate and launch a two-hour online workshop for first-time managers, secure ten paid bookings at $75 or more, and maintain an average feedback score of at least four out of five. I will use a $600 test budget and eight hours each week.",
+          "Revenue alone would not show whether the offer is useful, so this goal combines a commercial measure with a quality guardrail. The action plan tests the riskiest assumption—the audience’s willingness to pay—before investing in a large course.",
+        ],
+        steps: [
+          { title: "Interview ten potential participants", body: "Confirm the most urgent first-manager problems and the language people use to describe them." },
+          { title: "Define and pre-sell the workshop", body: "Write the promise, agenda, price, date, and refund terms, then invite interview participants to book." },
+          { title: "Build the minimum useful session", body: "Create the exercises, facilitator notes, and take-home checklist needed to deliver the promised outcome." },
+          { title: "Run the first workshop", body: "Deliver to a small paid group and collect ratings, open comments, and follow-up questions." },
+          { title: "Improve and run it again", body: "Revise the weakest section, repeat promotion through the strongest channel, and review bookings, revenue, and feedback in week twelve." },
+        ],
+        template: "Track interviews, landing-page visits, paid bookings, acquisition cost, attendance, and participant rating each week.",
+      },
+      {
+        id: "health-example",
+        heading: "4. Health SMART action plan: prepare for a first 5K",
+        paragraphs: [
+          "SMART goal: Within twelve weeks, I will complete a 5 km event by following a beginner-appropriate plan with three scheduled movement sessions each week, while adjusting for pain, recovery, and advice from a qualified health professional when needed.",
+          "The event provides a clear outcome, while completed sessions make progress visible before race day. The safety constraint matters: a goal is not achievable if the plan ignores health history, recovery, or warning signs.",
+        ],
+        steps: [
+          { title: "Check the starting point", body: "Choose an appropriate event date, assess current capacity, and get professional guidance if health concerns or symptoms make that necessary." },
+          { title: "Schedule three weekly sessions", body: "Place two shorter sessions and one gradually longer session into realistic calendar slots." },
+          { title: "Progress gradually", body: "Increase only one demand at a time and keep easier weeks or rest available for recovery." },
+          { title: "Rehearse the event", body: "Test clothing, hydration, pacing, and the planned route or conditions before the final week." },
+          { title: "Review the full cycle", body: "After the event, record completion, comfort, consistency, and what the next goal should preserve or change." },
+        ],
+        template: "Weekly review: sessions completed, distance or duration, recovery, discomfort, and next week’s adjustment.",
+      },
+      {
+        id: "learning-example",
+        heading: "5. Learning SMART action plan: hold a Spanish conversation",
+        paragraphs: [
+          "SMART goal: Within six months, I will hold a ten-minute conversation in Spanish with a tutor about travel, daily routines, and future plans, using no English for clarification. I will complete five twenty-minute practice sessions and one speaking session each week.",
+          "The conversation is direct evidence of the desired skill. Weekly practice is a leading measure the learner can control, while the six-month test prevents endless preparation without performance.",
+        ],
+        steps: [
+          { title: "Record a baseline conversation", body: "Attempt the same topics now and note where vocabulary, listening, or sentence formation breaks down." },
+          { title: "Build a useful language set", body: "Collect high-frequency phrases for the three topics instead of studying disconnected word lists." },
+          { title: "Create a weekly practice loop", body: "Alternate listening, recall, short writing, and speaking, then use the tutor session to expose gaps." },
+          { title: "Run monthly ten-minute tests", body: "Record one conversation under the final conditions and compare fluency, pauses, and clarification needs." },
+          { title: "Focus the final month", body: "Use the test recordings to target the two biggest gaps, then complete the final conversation." },
+        ],
+        template: "Track practice sessions, speaking minutes, phrases recalled, and one problem to address in the next tutor session.",
+      },
+      {
+        id: "adapt-example",
+        heading: "How to adapt any SMART action plan sample",
+        paragraphs: [
+          "Copy the structure, not the numbers. A twelve-week plan is only useful if the scope fits your starting point and weekly capacity. Replace the outcome, evidence, deadline, and constraints first. Then keep only the actions that produce your next milestone.",
+          "Review the draft as a connected system. If the goal changes, the milestones and estimates may need to change too. If an action does not create evidence, reduce uncertainty, or enable another step, remove it. The best plan is not the longest one; it is the smallest credible route from your current position to the finish line.",
+        ],
+        bullets: [
+          "Keep one observable finish line.",
+          "Use both outcome measures and controllable leading measures.",
+          "Match the plan to a normal week, not an ideal week.",
+          "Add an early review before the final deadline.",
+          "Break down only the next unclear step.",
+        ],
+      },
+    ],
+    sources: [
+      { label: "World Health Organization SMART action planning guide", href: "https://extranet.who.int/lqsi/sites/default/files/attachedfiles/SMART%20Action%20Planning_0.pdf" },
+      { label: "University of Kansas Community Tool Box action planning resources", href: "https://ctb.ku.edu/en/table-of-contents/structure/strategic-planning/develop-action-plans/tools" },
+      { label: "Worcester Polytechnic Institute SMART goal examples", href: "https://www.wpi.edu/sites/default/files/2025-06/Examples-of-SMART-Goals-by-Division-and-Roles.pdf" },
+    ],
+  },
+  {
+    slug: "how-to-use-an-ai-goal-planner",
+    title: "How to Use an AI Goal Planner Without Getting a Generic Plan",
+    description: "Learn how to use an AI goal planner to clarify a SMART goal, add useful context, evaluate generated steps, and build an action plan that fits real life.",
+    excerpt: "AI can draft the structure quickly. The quality comes from a clear finish line, honest constraints, and a careful review of every suggested step.",
+    category: "AI goal planning",
+    publishedAt: "2026-08-14",
+    updatedAt: "2026-08-14",
+    readingTime: "8 min read",
+    keywords: [
+      "AI goal planner",
+      "AI goal planning",
+      "goal planner AI",
+      "AI action plan generator",
+      "SMART goal planner",
+      "actionable goal plan",
+    ],
+    coverLabel: "Your context → a useful AI plan",
+    coverVariant: "blue",
+    sections: [
+      {
+        id: "what-ai-planner-does",
+        heading: "What an AI goal planner should actually do",
+        paragraphs: [
+          "An AI goal planner should reduce the distance between a rough intention and a plan you can inspect. It can propose a clearer target, ask for missing context, organize milestones, identify dependencies, estimate small tasks, and suggest a first action. That is more useful than returning a motivational paragraph or an enormous undifferentiated checklist.",
+          "The output is still a draft. AI does not know your calendar, health, finances, workplace, skill level, or changing priorities unless you provide relevant context—and even then, it can make weak assumptions. Use it to accelerate planning, while keeping decisions about feasibility, safety, and importance with you.",
+        ],
+        bullets: [
+          "Clarify the finish line before generating tasks.",
+          "Ask for context that changes the route.",
+          "Organize work into outcomes and next actions.",
+          "Show estimates as hypotheses, not guarantees.",
+          "Keep every part editable and reviewable.",
+        ],
+      },
+      {
+        id: "start-rough",
+        heading: "Start with the goal you have, even if it is vague",
+        paragraphs: [
+          "You do not need to write a perfect prompt. “Get fitter,” “launch my business,” or “finish my dissertation” is enough to begin. The planner’s first job is to expose what is missing, not pretend the vague statement is already an executable goal.",
+          "A strong first pass converts the direction into a proposed SMART goal. Review the wording rather than accepting it automatically. The draft should describe the result you want—not substitute a convenient activity count for the outcome that matters.",
+        ],
+        template: "I want to [rough direction]. My current starting point is [baseline]. This matters because [reason].",
+      },
+      {
+        id: "review-smart-draft",
+        heading: "Review the SMART goal before building the action plan",
+        paragraphs: [
+          "Check the five dimensions separately. Specific identifies the actual result. Measurable names evidence. Achievable tests scope against resources. Relevant protects capacity for something that matters. Time-bound adds a finish or decision point. Editing these fields before generating the plan prevents one weak assumption from spreading into every step.",
+        ],
+        steps: [
+          { title: "Specific", body: "Can you picture the completed result, who it affects, and what is outside the scope?" },
+          { title: "Measurable", body: "Would an independent person recognize the evidence that the goal is complete?" },
+          { title: "Achievable", body: "Does the target fit your baseline, time, money, skills, support, and known constraints?" },
+          { title: "Relevant", body: "Does this goal deserve attention now, and what larger outcome does it support?" },
+          { title: "Time-bound", body: "Is there a credible deadline plus an earlier point to review assumptions?" },
+        ],
+      },
+      {
+        id: "add-context",
+        heading: "Give the AI context that changes the plan",
+        paragraphs: [
+          "Useful context is not a long autobiography. Include facts that change scope, order, effort, or risk: your baseline, deadline, weekly capacity, budget, existing resources, fixed commitments, required approvals, and quality or safety constraints.",
+          "If a fact would not change the plan, leave it out. If you do not know an important fact, say that it is uncertain. A good plan turns uncertainty into an early discovery action rather than inventing confidence.",
+        ],
+        bullets: [
+          "Starting point: what already exists or has been completed?",
+          "Capacity: how many hours or how much budget is actually available?",
+          "Constraints: which dates, rules, dependencies, or limits cannot move?",
+          "Resources: which people, tools, materials, or skills can help?",
+          "Quality bar: what must be true beyond simply finishing?",
+        ],
+        template: "I have [weekly capacity] and [resources]. I must work around [constraints]. The result must meet [quality or safety criteria]. I am uncertain about [unknown].",
+      },
+      {
+        id: "evaluate-plan",
+        heading: "Test the generated plan before you trust it",
+        paragraphs: [
+          "Read the plan from the finish line backward. Do the milestones create the promised evidence? Do the steps respect dependencies? Are estimates attached to work small enough to estimate? Does the first action fit your current position? Remove generic filler such as “stay motivated,” “research options,” or “work on the project” unless it produces a specific output.",
+          "Then compare the total effort with your available weeks. If the numbers do not fit, change the scope, deadline, or capacity. Do not keep an impossible plan because the wording sounds confident.",
+        ],
+        bullets: [
+          "Every milestone describes an observable completed state.",
+          "Each active step begins with a clear verb and produces one result.",
+          "Dependencies appear before the work they enable.",
+          "Time estimates add up without counting parent and child work twice.",
+          "The plan includes a checkpoint before the final deadline.",
+        ],
+      },
+      {
+        id: "worked-example",
+        heading: "Example: use AI to plan a newsletter launch",
+        paragraphs: [
+          "Rough goal: “Start a newsletter.” A useful SMART draft could be: “Within twelve weeks, publish eight weekly issues for first-time product managers and reach 150 relevant subscribers, using five hours each week.” Before accepting it, the user should confirm whether eight issues, 150 subscribers, and five hours are credible.",
+          "Useful context might include an existing audience of forty people, no email platform, a $200 budget, one experienced editor available for feedback, and a fixed launch date. The action plan can then sequence audience interviews, positioning, platform setup, an editorial outline, the first issue, signup testing, publishing, and distribution. Without that context, an AI planner is likely to produce a generic content checklist.",
+        ],
+        steps: [
+          { title: "Define the reader and promise", body: "Interview five potential readers and write one positioning statement based on repeated problems." },
+          { title: "Build the publishing system", body: "Choose the platform, configure signup and welcome messages, and test the complete subscription path." },
+          { title: "Prepare the first three issues", body: "Outline all three, draft the first, and use editor feedback to improve the shared format." },
+          { title: "Publish and distribute weekly", body: "Use two relevant channels, track subscriptions and replies, and protect the five-hour capacity limit." },
+          { title: "Review after issue four", body: "Compare actual writing time, subscriber growth, replies, and topic performance before planning the final four issues." },
+        ],
+      },
+      {
+        id: "high-stakes",
+        heading: "Use extra judgment for high-stakes goals",
+        paragraphs: [
+          "Do not follow an unreviewed AI plan when mistakes could materially affect health, safety, legal rights, finances, employment, or other people. Use qualified professional advice where appropriate and treat the planner as an organizational aid, not an authority.",
+          "Also avoid sharing sensitive personal or confidential information that is unnecessary for the plan. Describe constraints at the level needed to organize the work. You can often say “a fixed medical limitation” or “a confidential approval process” without supplying private details.",
+        ],
+      },
+      {
+        id: "good-output",
+        heading: "The result should be easier to act on—and easier to change",
+        paragraphs: [
+          "A useful AI-generated goal plan gives you an obvious next action today, a visible milestone ahead, and a finish line you can evaluate. It should also remain editable. Real progress reveals new information, so the plan must absorb completed work, updated estimates, changed constraints, and better ideas.",
+          "That is the right division of labor: AI drafts and organizes quickly; you supply context, challenge assumptions, choose trade-offs, and decide what matters.",
+        ],
+      },
+    ],
+    sources: [
+      { label: "NIST AI Risk Management Framework: Generative AI Profile", href: "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf" },
+      { label: "Implementation intentions and goal achievement meta-analysis", href: "https://www.researchgate.net/publication/37367696_Implementation_Intentions_and_Goal_Achievement_A_Meta-Analysis_of_Effects_and_Processes" },
+    ],
+  },
+  {
     slug: "how-to-break-down-big-goals-into-small-steps",
     title: "How to Break Down Big Goals Into Small Achievable Steps",
     description: "A concrete goal breakdown method for turning an overwhelming goal into milestones, manageable tasks, and a next action you can start today.",

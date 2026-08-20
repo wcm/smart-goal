@@ -5,18 +5,22 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Clock3,
   CloudOff,
-  Lightbulb,
   LoaderCircle,
+  Pencil,
   Sparkles,
 } from "lucide-react";
-import { ContextDialog } from "@/components/context-dialog";
+import {
+  PlanContextEditorDialog,
+  StepEditorDialog,
+  type StepEditorAction,
+  type StepEditorValues,
+} from "@/components/context-editor-dialog";
 import { GuestUpgradeButton } from "@/components/guest-upgrade-button";
 import { StepTree } from "@/components/step-tree";
-import { Button } from "@/components/ui/button";
 import { PageBackLink } from "@/components/page-back-link";
 import { PlanEmojiPicker } from "@/components/plan-emoji-picker";
 import { AiClientError, postAi } from "@/lib/ai/client";
-import { GUEST_MAX_STEP_DEPTH } from "@/lib/config";
+import { GUEST_MAX_STEP_DEPTH, MAX_STEP_DEPTH } from "@/lib/config";
 import { clearGuestPlanSnapshot } from "@/lib/planner/guest-transfer";
 import {
   getPlan,
@@ -27,16 +31,11 @@ import {
   buildStepTree,
   calculatePlanProgress,
   formatMinutes,
-  getActiveSteps,
-  hasCompletedDescendants,
-  replacePlanSteps,
   replaceStepChildren,
   setStepCompletion,
 } from "@/lib/planner/tree";
 import type {
   ContextAnswer,
-  GeneratedPlan,
-  GeneratedQuestion,
   GeneratedStep,
   PlanRecord,
   StepRecord,
@@ -44,8 +43,90 @@ import type {
 } from "@/lib/planner/types";
 import { asErrorMessage, createId } from "@/lib/utils";
 
-type ContextTarget = { step: StepRecord | null; questions: GeneratedQuestion[] };
 type UpgradeReason = "save" | "depth" | "usage";
+const MANUAL_STEP_CONTEXT_QUESTION = "Additional step context";
+
+function hasUsefulAnswer(answer: string) {
+  const normalized = answer.trim().toLowerCase();
+  return Boolean(normalized) && normalized !== "no preference provided.";
+}
+
+function contextAnswerLine(entry: ContextAnswer) {
+  return entry.question === MANUAL_STEP_CONTEXT_QUESTION
+    ? entry.answer.trim()
+    : `${entry.question}: ${entry.answer.trim()}`;
+}
+
+function getPlanContextItems(plan: PlanRecord) {
+  const items = [
+    ...plan.contexts
+      .filter((entry) => entry.targetStepId === null && hasUsefulAnswer(entry.answer))
+      .map(contextAnswerLine),
+    ...plan.assumptions.map((assumption) => assumption.trim()).filter(Boolean),
+  ];
+  return Array.from(new Set(items));
+}
+
+function getStepContextText(plan: PlanRecord, stepId: string) {
+  return plan.contexts
+    .filter((entry) => entry.targetStepId === stepId && hasUsefulAnswer(entry.answer))
+    .map(contextAnswerLine)
+    .join("\n");
+}
+
+function packContextLines(lines: string[], maxChunks = 12) {
+  const chunks: string[] = [];
+  let current = "";
+
+  for (const rawLine of lines) {
+    let remaining = rawLine.trim();
+    while (remaining && chunks.length < maxChunks) {
+      const separator = current ? "\n" : "";
+      const available = 2000 - current.length - separator.length;
+      const part = remaining.slice(0, available);
+      current += `${separator}${part}`;
+      remaining = remaining.slice(part.length);
+      if (current.length >= 2000) {
+        chunks.push(current);
+        current = "";
+      }
+    }
+    if (chunks.length >= maxChunks) break;
+  }
+  if (current && chunks.length < maxChunks) chunks.push(current);
+  return chunks;
+}
+
+function getBreakdownContext(plan: PlanRecord, step: StepRecord) {
+  const pathIds = new Set<string>();
+  let current: StepRecord | undefined = step;
+  while (current) {
+    pathIds.add(current.id);
+    current = current.parentId
+      ? plan.steps.find((candidate) => candidate.id === current?.parentId)
+      : undefined;
+  }
+
+  const stepContext = plan.contexts
+    .filter((entry) => entry.targetStepId && pathIds.has(entry.targetStepId) && hasUsefulAnswer(entry.answer))
+    .sort((left, right) => Number(right.targetStepId === step.id) - Number(left.targetStepId === step.id))
+    .map((entry) => {
+      const sourceStep = plan.steps.find((candidate) => candidate.id === entry.targetStepId);
+      return `${sourceStep?.title ?? "Step"}: ${contextAnswerLine(entry)}`;
+    });
+  const planAnswers = plan.contexts
+    .filter((entry) => entry.targetStepId === null && hasUsefulAnswer(entry.answer))
+    .map((entry) => contextAnswerLine(entry));
+  const planContext = plan.assumptions
+    .map((answer) => answer.trim())
+    .filter(Boolean)
+    .map((answer) => `Plan context: ${answer}`);
+
+  return packContextLines([...stepContext, ...planAnswers, ...planContext]).map((answer, index) => ({
+    question: index === 0 ? "Relevant saved context" : `Relevant saved context (continued ${index + 1})`,
+    answer,
+  }));
+}
 
 function ancestorPath(plan: PlanRecord, step: StepRecord) {
   const path = [step.title];
@@ -64,8 +145,8 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyTarget, setBusyTarget] = useState<string | null>(null);
-  const [contextTarget, setContextTarget] = useState<ContextTarget | null>(null);
-  const [contextBusy, setContextBusy] = useState(false);
+  const [editTarget, setEditTarget] = useState<"plan" | string | null>(null);
+  const [editBusy, setEditBusy] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState<UpgradeReason | null>(null);
 
   useEffect(() => {
@@ -84,8 +165,14 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
     [plan],
   );
   const tree = useMemo(() => (plan ? buildStepTree(plan) : []), [plan]);
-  const contextStepHasChildren = Boolean(
-    plan && contextTarget?.step && getActiveSteps(plan).some((step) => step.parentId === contextTarget.step?.id),
+  const planContextItems = useMemo(() => plan ? getPlanContextItems(plan) : [], [plan]);
+  const editedStep = useMemo(
+    () => plan && editTarget && editTarget !== "plan" ? plan.steps.find((step) => step.id === editTarget) ?? null : null,
+    [editTarget, plan],
+  );
+  const editedStepHasChildren = useMemo(
+    () => Boolean(plan && editedStep && plan.steps.some((step) => !step.archivedAt && step.parentId === editedStep.id)),
+    [editedStep, plan],
   );
 
   function handlePlanningError(reason: unknown) {
@@ -129,154 +216,136 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
     }
   }
 
-  function confirmReplacement(step: StepRecord | null) {
-    if (!plan) return false;
-    const hasCompleted = step
-      ? hasCompletedDescendants(plan, step.id)
-      : getActiveSteps(plan).some((candidate) => candidate.isCompleted);
-    return (
-      !hasCompleted ||
-      window.confirm(
-        "This branch contains completed work. Regenerating will replace the active steps and reset progress for this branch. Your activity history will remain. Continue?",
-      )
+  function confirmRegeneration() {
+    return window.confirm(
+      "Regenerate all sub-tasks? Their titles, descriptions, context, and completion progress will all be updated.",
+    ) && window.confirm(
+      "One final check: this cannot be undone. Are you sure you want to regenerate every sub-task?",
     );
   }
 
-  async function breakDown(
-    step: StepRecord,
-    context: { question: string; answer: string }[] = [],
-    questionMetadata: GeneratedQuestion[] = [],
-  ) {
-    if (!plan) return;
+  async function breakDown(step: StepRecord, sourcePlan = plan, regenerationConfirmed = false) {
+    if (!sourcePlan) return;
     if (viewer.isGuest && step.depth >= GUEST_MAX_STEP_DEPTH) {
       setUpgradeReason("depth");
       return;
     }
-    if (!confirmReplacement(step)) return;
+    const hasChildren = sourcePlan.steps.some((candidate) => !candidate.archivedAt && candidate.parentId === step.id);
+    if (hasChildren && !regenerationConfirmed && !confirmRegeneration()) return;
+    const context = getBreakdownContext(sourcePlan, step);
     setBusyTarget(step.id);
-    setContextBusy(context.length > 0);
     setError("");
     try {
       const { output } = await postAi<{ steps: GeneratedStep[] }>("breakdown", {
-        goal: plan.goal,
-        planSummary: plan.summary,
+        goal: sourcePlan.goal,
+        planSummary: sourcePlan.summary,
         targetTitle: step.title,
         targetDescription: step.description,
         targetMinutes: step.estimatedMinutes,
         targetDepth: step.depth,
-        ancestorPath: ancestorPath(plan, step),
+        ancestorPath: ancestorPath(sourcePlan, step),
         context,
       });
       const generationId = createId();
       const now = new Date().toISOString();
-      let updated = replaceStepChildren({
-        plan,
+      const updated = replaceStepChildren({
+        plan: sourcePlan,
         stepId: step.id,
         generated: output.steps,
         generationId,
         now,
       });
-      const newContexts: ContextAnswer[] = context.map((entry, position) => ({
-        id: createId(),
-        planId: plan.id,
-        userId: plan.userId,
-        targetStepId: step.id,
-        generationId,
-        question: entry.question,
-        reason: questionMetadata[position]?.reason ?? "Added before regeneration.",
-        answer: entry.answer,
-        position,
-        createdAt: now,
-      }));
-      updated = { ...updated, contexts: updated.contexts.concat(newContexts) };
       await savePlan(updated, { temporary: viewer.isGuest });
       setPlan(updated);
-      setContextTarget(null);
     } catch (reason) {
       handlePlanningError(reason);
     } finally {
       setBusyTarget(null);
-      setContextBusy(false);
     }
   }
 
-  async function askForContext(step: StepRecord | null) {
+  async function savePlanContext(context: string[]) {
     if (!plan) return;
-    if (viewer.isGuest && step && step.depth >= GUEST_MAX_STEP_DEPTH) {
-      setUpgradeReason("depth");
-      return;
-    }
-    setBusyTarget(step?.id ?? "plan-context");
+    setEditBusy(true);
     setError("");
     try {
-      const existing = plan.contexts
-        .filter((entry) => entry.targetStepId === (step?.id ?? null))
-        .map((entry) => ({ question: entry.question, answer: entry.answer }));
-      const { output } = await postAi<{ questions: GeneratedQuestion[] }>("questions", {
-        goal: plan.goal,
-        planSummary: plan.summary,
-        targetTitle: step?.title ?? null,
-        targetDescription: step?.description ?? null,
-        ancestorPath: step ? ancestorPath(plan, step) : [],
-        existingContext: existing,
-      });
-      setContextTarget({ step, questions: output.questions });
-    } catch (reason) {
-      handlePlanningError(reason);
-    } finally {
-      setBusyTarget(null);
-    }
-  }
-
-  async function regeneratePlan(
-    context: { question: string; answer: string }[],
-    questionMetadata: GeneratedQuestion[],
-  ) {
-    if (!plan || !confirmReplacement(null)) return;
-    setContextBusy(true);
-    setBusyTarget("plan-context");
-    setError("");
-    try {
-      const { output } = await postAi<GeneratedPlan>("plan", {
-        goal: plan.goal,
-        context,
-      });
-      const generationId = createId();
       const now = new Date().toISOString();
-      let updated = replacePlanSteps({
-        plan,
-        generated: output.steps,
-        generationId,
-        title: output.title,
-        summary: output.summary,
-        assumptions: output.assumptions,
-        now,
-      });
-      updated = {
-        ...updated,
-        contexts: updated.contexts.concat(
-          context.map((entry, position) => ({
-            id: createId(),
-            planId: plan.id,
-            userId: plan.userId,
-            targetStepId: null,
-            generationId,
-            question: entry.question,
-            reason: questionMetadata[position]?.reason ?? "Added before regeneration.",
-            answer: entry.answer,
-            position,
-            createdAt: now,
-          })),
-        ),
+      const updated: PlanRecord = {
+        ...plan,
+        assumptions: context,
+        contexts: plan.contexts.map((entry) => entry.targetStepId === null ? { ...entry, answer: "" } : entry),
+        updatedAt: now,
       };
       await savePlan(updated, { temporary: viewer.isGuest });
       setPlan(updated);
-      setContextTarget(null);
+      setEditTarget(null);
     } catch (reason) {
-      handlePlanningError(reason);
+      setError(asErrorMessage(reason));
     } finally {
-      setContextBusy(false);
-      setBusyTarget(null);
+      setEditBusy(false);
+    }
+  }
+
+  async function saveStepChanges(values: StepEditorValues, action?: StepEditorAction) {
+    if (!plan || !editedStep) return;
+    setEditBusy(true);
+    setError("");
+    try {
+      const currentContext = getStepContextText(plan, editedStep.id).trim();
+      const hasChanges = values.title !== editedStep.title
+        || values.description !== editedStep.description
+        || values.estimatedMinutes !== editedStep.estimatedMinutes
+        || values.context !== currentContext;
+      if (!hasChanges) {
+        setEditTarget(null);
+        if (action) await breakDown(editedStep, plan, action === "regenerate");
+        return;
+      }
+      const now = new Date().toISOString();
+      const stepContexts = plan.contexts.filter((entry) => entry.targetStepId === editedStep.id);
+      const manualContext = stepContexts.find((entry) => entry.question === MANUAL_STEP_CONTEXT_QUESTION);
+      let updatedContexts = plan.contexts.map((entry) => entry.targetStepId === editedStep.id ? { ...entry, answer: "" } : entry);
+      if (values.context) {
+        if (manualContext) {
+          updatedContexts = updatedContexts.map((entry) => entry.id === manualContext.id ? { ...entry, answer: values.context } : entry);
+        } else {
+          updatedContexts = updatedContexts.concat({
+            id: createId(),
+            planId: plan.id,
+            userId: plan.userId,
+            targetStepId: editedStep.id,
+            generationId: editedStep.generationId,
+            question: MANUAL_STEP_CONTEXT_QUESTION,
+            reason: "Edited directly by the user.",
+            answer: values.context,
+            position: stepContexts.length,
+            createdAt: now,
+          });
+        }
+      }
+      const updated: PlanRecord = {
+        ...plan,
+        steps: plan.steps.map((step) => step.id === editedStep.id ? {
+          ...step,
+          title: values.title,
+          description: values.description,
+          estimatedMinutes: values.estimatedMinutes,
+          updatedAt: now,
+        } : step),
+        contexts: updatedContexts,
+        updatedAt: now,
+      };
+      const updatedStep = updated.steps.find((step) => step.id === editedStep.id);
+      await savePlan(updated, { temporary: viewer.isGuest });
+      setPlan(updated);
+      setEditTarget(null);
+      if (action && updatedStep) {
+        await breakDown(updatedStep, updated, action === "regenerate");
+      }
+    } catch (reason) {
+      setError(asErrorMessage(reason));
+    } finally {
+      setEditBusy(false);
     }
   }
 
@@ -294,7 +363,7 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
       {viewer.isGuest && (
         <div className="guest-plan-banner">
           <div>
-            <CloudOff size={18} />
+            <CloudOff size={22} />
             <span><strong>Don’t lose your progress</strong><small>Sign in to save this plan and continue next time.</small></span>
           </div>
           <GuestUpgradeButton
@@ -318,31 +387,34 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
       </section>
 
       <details className="assumptions">
-        <summary>Planning assumptions</summary>
-        {plan.assumptions.length > 0 && <ul>{plan.assumptions.map((assumption) => <li key={assumption}>{assumption}</li>)}</ul>}
-        <div className="assumptions-actions">
-          <Button variant="secondary" onClick={() => askForContext(null)} disabled={Boolean(busyTarget)}>{busyTarget === "plan-context" ? <LoaderCircle className="spin" size={17} /> : <Lightbulb size={17} />} Add context</Button>
-        </div>
+        <summary>
+          <span>Plan context</span>
+          <button className="context-edit-button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); setEditTarget("plan"); }} aria-label="Edit plan context" title="Edit plan context"><Pencil size={15} /></button>
+        </summary>
+        {planContextItems.length > 0
+          ? <ul>{planContextItems.map((item) => <li key={item}>{item}</li>)}</ul>
+          : <p className="assumptions-empty">No additional context yet.</p>}
       </details>
 
       <section className="plan-steps-section">
         <div className="steps-heading"><h2>Steps</h2></div>
-        <StepTree nodes={tree} busyTarget={busyTarget} onToggle={toggle} onBreakdown={(step) => breakDown(step)} onAddContext={askForContext} isGuest={viewer.isGuest} />
+        <StepTree nodes={tree} busyTarget={busyTarget} onToggle={toggle} onBreakdown={(step) => breakDown(step)} onEdit={(step) => setEditTarget(step.id)} isGuest={viewer.isGuest} />
       </section>
 
-      <ContextDialog
-        open={Boolean(contextTarget)}
-        subject={contextTarget?.step?.title ?? plan.title}
-        questions={contextTarget?.questions ?? []}
-        busy={contextBusy}
-        submitLabel={contextTarget?.step ? contextStepHasChildren ? "Regenerate" : "Break it down" : "Update the plan"}
-        busyLabel={contextTarget?.step ? contextStepHasChildren ? "Regenerating…" : "Breaking it down…" : "Updating…"}
-        onClose={() => setContextTarget(null)}
-        onSubmit={(answers) => {
-          if (!contextTarget) return;
-          if (contextTarget.step) breakDown(contextTarget.step, answers, contextTarget.questions);
-          else regeneratePlan(answers, contextTarget.questions);
-        }}
+      <PlanContextEditorDialog
+        open={editTarget === "plan"}
+        initialContext={planContextItems}
+        busy={editBusy}
+        onClose={() => setEditTarget(null)}
+        onSave={(context) => void savePlanContext(context)}
+      />
+      <StepEditorDialog
+        step={editedStep}
+        initialContext={editedStep ? getStepContextText(plan, editedStep.id) : ""}
+        hasChildren={editedStepHasChildren}
+        actionDisabled={Boolean(editedStep && editedStep.depth >= MAX_STEP_DEPTH)}
+        busy={editBusy}
+        onSave={(values, action) => void saveStepChanges(values, action)}
       />
     </main>
   );

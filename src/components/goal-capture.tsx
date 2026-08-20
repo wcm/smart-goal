@@ -27,38 +27,64 @@ const promptRows = [
 ];
 
 const rotatingGoals = promptRows.flat().map((prompt) => `I want to ${prompt.toLocaleLowerCase("en")}`);
+const autoGoalPrefix = "I want to ";
+const initialGoal = "I want to launch a useful weekly newsletter";
 
 function randomGoal(current = "") {
   const alternatives = rotatingGoals.filter((goal) => goal !== current);
   return alternatives[Math.floor(Math.random() * alternatives.length)] ?? rotatingGoals[0];
 }
 
-export function GoalCapture({ showSuggestions = false }: { showSuggestions?: boolean }) {
+export function GoalCapture({ showSuggestions = false, id }: { showSuggestions?: boolean; id?: string }) {
   const router = useRouter();
-  const [goal, setGoal] = useState("I want to launch a newsletter");
+  const [goal, setGoal] = useState(initialGoal);
   const [isAutoGoal, setIsAutoGoal] = useState(true);
   const [focused, setFocused] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const autoGoalTargetRef = useRef(initialGoal);
 
   useEffect(() => {
     if (focused || !isAutoGoal || submitting) return;
-    const initialRotation = window.setTimeout(() => {
-      setGoal((current) => randomGoal(current));
-    }, 0);
-    const interval = window.setInterval(() => {
-      setGoal((current) => randomGoal(current));
-    }, 4500);
+    let timeout: number | undefined;
+    let stopped = false;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const showNextGoal = () => {
+      const nextGoal = randomGoal(autoGoalTargetRef.current);
+      autoGoalTargetRef.current = nextGoal;
+
+      if (prefersReducedMotion) {
+        setGoal(nextGoal);
+        timeout = window.setTimeout(showNextGoal, 4500);
+        return;
+      }
+
+      let characterIndex = autoGoalPrefix.length;
+      setGoal(autoGoalPrefix);
+      const typeNextCharacter = () => {
+        if (stopped) return;
+        characterIndex += 1;
+        setGoal(nextGoal.slice(0, characterIndex));
+        timeout = characterIndex < nextGoal.length
+          ? window.setTimeout(typeNextCharacter, 34)
+          : window.setTimeout(showNextGoal, 3400);
+      };
+      timeout = window.setTimeout(typeNextCharacter, 120);
+    };
+
+    timeout = window.setTimeout(showNextGoal, 3400);
     return () => {
-      window.clearTimeout(initialRotation);
-      window.clearInterval(interval);
+      stopped = true;
+      if (timeout !== undefined) window.clearTimeout(timeout);
     };
   }, [focused, isAutoGoal, submitting]);
 
   async function submit() {
     if (submitting) return;
-    const value = goal.trim() || randomGoal();
+    const value = (isAutoGoal ? autoGoalTargetRef.current : goal).trim() || randomGoal();
+    setGoal(value);
     setSubmitting(true);
     setError("");
     try {
@@ -81,7 +107,7 @@ export function GoalCapture({ showSuggestions = false }: { showSuggestions?: boo
   }
 
   return (
-    <div className="goal-capture">
+    <div className="goal-capture" id={id}>
       {showSuggestions && (
         <div className="prompt-tickers" aria-label="Example goals">
           {promptRows.map((prompts, rowIndex) => (
@@ -92,7 +118,9 @@ export function GoalCapture({ showSuggestions = false }: { showSuggestions?: boo
                     type="button"
                     key={`${prompt}-${index}`}
                     onClick={() => {
-                      setGoal(`I want to ${prompt.toLocaleLowerCase("en")}`);
+                      const selectedGoal = `I want to ${prompt.toLocaleLowerCase("en")}`;
+                      autoGoalTargetRef.current = selectedGoal;
+                      setGoal(selectedGoal);
                       setIsAutoGoal(false);
                       inputRef.current?.focus();
                     }}
@@ -114,7 +142,10 @@ export function GoalCapture({ showSuggestions = false }: { showSuggestions?: boo
             setGoal(event.target.value);
             setIsAutoGoal(!event.target.value.trim());
           }}
-          onFocus={() => setFocused(true)}
+          onFocus={() => {
+            setFocused(true);
+            if (isAutoGoal) setGoal(autoGoalTargetRef.current);
+          }}
           onBlur={() => setFocused(false)}
           onKeyDown={(event) => {
             if (event.key === "Enter") void submit();
@@ -124,7 +155,7 @@ export function GoalCapture({ showSuggestions = false }: { showSuggestions?: boo
           maxLength={1200}
         />
         <Button size="lg" onClick={() => void submit()} aria-busy={submitting}>
-          {submitting ? "Starting your plan…" : "How do I achieve it?"}
+          {submitting ? "Making it SMART…" : "Make it SMART"}
           {submitting ? <LoaderCircle className="spin" size={18} /> : <ArrowUpRight size={18} />}
         </Button>
       </div>

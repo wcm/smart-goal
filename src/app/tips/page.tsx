@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import { TipCover } from "@/components/tip-visuals";
 import { tipArticles } from "@/lib/tips";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
-  title: "Goal Planning Tips & Practical Guides",
-  description: "Actionable guides for setting clear goals, breaking big goals into small steps, planning your week, and building consistent progress.",
+  title: "SMART Goal Planning Tips & Action Plan Guides",
+  description: "Practical SMART goal planning guides, action plan examples, and methods for turning big goals into clear, achievable steps.",
   alternates: { canonical: "/tips" },
   openGraph: {
-    title: "Goal Planning Tips & Practical Guides",
-    description: "Concrete goal-setting methods and planning systems you can put into action today.",
+    title: "SMART Goal Planning Tips & Action Plan Guides",
+    description: "Practical SMART goal examples, action plans, and planning methods you can put into action today.",
     url: "/tips",
   },
 };
@@ -32,17 +31,19 @@ export default function TipsPage() {
 
   return (
     <main className="tips-index page-shell app-shell">
-      <section className="dashboard-heading tips-heading"><h1>Tips</h1></section>
+      <section className="dashboard-heading tips-heading">
+        <h1>SMART goal planning tips</h1>
+        <p>Practical guides for writing actionable goals, building realistic action plans, and making steady progress.</p>
+      </section>
 
       <section className="tip-card-grid" aria-label="Goal planning articles">
         {tipArticles.map((article) => (
           <Link className="tip-card" href={`/tips/${article.slug}`} key={article.slug}>
             <div className="tip-card-cover"><TipCover article={article} compact /></div>
             <div className="tip-card-body">
-              <div className="tip-card-meta"><span>{article.category}</span><span>{article.readingTime}</span></div>
               <h2>{article.title}</h2>
               <p>{article.excerpt}</p>
-              <span className="tip-card-link">Read guide <ArrowUpRight size={16} /></span>
+              <div className="tip-card-meta"><span>{article.category}</span><span>{article.readingTime}</span></div>
             </div>
           </Link>
         ))}

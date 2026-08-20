@@ -25,6 +25,15 @@ export const GeneratedQuestionsSchema = z.object({
     .length(3),
 });
 
+export const GeneratedSmartGoalSchema = z.object({
+  goal: z.string().trim().min(3).max(1200),
+  specific: z.string().trim().min(3).max(500),
+  measurable: z.string().trim().min(3).max(500),
+  achievable: z.string().trim().min(3).max(500),
+  relevant: z.string().trim().min(3).max(500),
+  timeBound: z.string().trim().min(3).max(500),
+});
+
 export const GeneratedBreakdownSchema = z.object({
   steps: z.array(GeneratedStepSchema).min(2).max(8),
 });
@@ -37,6 +46,10 @@ export const ContextInputSchema = z.object({
 export const GeneratePlanInputSchema = z.object({
   goal: z.string().trim().min(3).max(1200),
   context: z.array(ContextInputSchema).max(8).default([]),
+});
+
+export const GenerateSmartGoalInputSchema = z.object({
+  goal: z.string().trim().min(3).max(1200),
 });
 
 export const GenerateQuestionsInputSchema = z.object({
@@ -56,5 +69,5 @@ export const GenerateBreakdownInputSchema = z.object({
   targetMinutes: z.number().int().min(2).max(525600),
   targetDepth: z.number().int().min(1).max(9),
   ancestorPath: z.array(z.string().max(500)).max(10),
-  context: z.array(ContextInputSchema).max(8).default([]),
+  context: z.array(ContextInputSchema).max(12).default([]),
 });

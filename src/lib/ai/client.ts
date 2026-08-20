@@ -11,7 +11,7 @@ export class AiClientError extends Error {
   }
 }
 
-export async function postAi<T>(path: "plan" | "questions" | "breakdown", body: unknown) {
+export async function postAi<T>(path: "smart" | "plan" | "questions" | "breakdown", body: unknown) {
   const response = await fetch(`/api/ai/${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

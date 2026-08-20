@@ -5,12 +5,14 @@ import {
   GeneratedBreakdownSchema,
   GeneratedPlanSchema,
   GeneratedQuestionsSchema,
+  GeneratedSmartGoalSchema,
   type ContextInputSchema,
 } from "@/lib/ai/schemas";
 import {
   BREAKDOWN_PROMPT,
   PLAN_PROMPT,
   QUESTIONS_PROMPT,
+  SMART_GOAL_PROMPT,
 } from "@/lib/ai/prompts";
 import type { z } from "zod";
 
@@ -51,6 +53,49 @@ function emojiFromGoal(goal: string) {
 }
 
 class DemoAiProvider {
+  async generateSmartGoal(goal: string) {
+    const normalized = goal.toLowerCase();
+    if (/newsletter|email|audience/.test(normalized)) {
+      return {
+        goal: "Publish one useful newsletter issue each week for 8 weeks and reach the first 100 subscribers by the end of that period.",
+        specific: "Publish a focused newsletter for a clearly defined audience.",
+        measurable: "Publish 8 issues and reach 100 subscribers.",
+        achievable: "Work in a weekly research, writing, editing, and publishing rhythm.",
+        relevant: "Build a consistent publishing practice and a direct audience channel.",
+        timeBound: "Complete the first 8-week publishing cycle.",
+      };
+    }
+    if (/run|marathon|fitness|workout|exercise/.test(normalized)) {
+      return {
+        goal: "Complete my first half marathon within 16 weeks by following four progressive training sessions each week and finishing the full race distance.",
+        specific: "Train for and complete a first half marathon.",
+        measurable: "Complete four planned sessions each week and finish 21.1 km.",
+        achievable: "Increase distance progressively with recovery built into the schedule.",
+        relevant: "Build the endurance and consistency needed to finish the race safely.",
+        timeBound: "Train and complete the goal within 16 weeks.",
+      };
+    }
+    if (/spanish|language|conversation/.test(normalized)) {
+      return {
+        goal: "Hold a 10-minute everyday conversation in Spanish within 6 months by practising for 30 minutes five days a week and completing one speaking session weekly.",
+        specific: "Build practical Spanish for an everyday conversation.",
+        measurable: "Sustain a 10-minute conversation and complete five practice sessions each week.",
+        achievable: "Use short daily practice plus one weekly speaking session.",
+        relevant: "Prioritise useful spoken Spanish over broad academic fluency.",
+        timeBound: "Reach the conversation milestone within 6 months.",
+      };
+    }
+    const subject = titleFromGoal(goal).replace(/^I want to\s+/i, "");
+    return {
+      goal: `${subject} within 12 weeks by completing one concrete milestone each week and reviewing progress every Friday.`,
+      specific: `Complete a clearly defined version of: ${subject}.`,
+      measurable: "Complete one meaningful milestone each week and record whether it met the agreed finish criteria.",
+      achievable: "Use a steady weekly scope that can be adjusted around real constraints.",
+      relevant: "Keep the work focused on the outcome described in the starting goal.",
+      timeBound: "Complete the goal within 12 weeks, with a review every Friday.",
+    };
+  }
+
   async generatePlan(goal: string, context: ContextInput[]) {
     const subject = titleFromGoal(goal);
     const contextNote = context.length
@@ -182,6 +227,28 @@ class OpenAiProvider {
   constructor(apiKey: string) {
     this.client = new OpenAI({ apiKey });
     this.model = process.env.OPENAI_MODEL || "gpt-5.6-terra";
+  }
+
+  async generateSmartGoal(goal: string, identity: RequestIdentity) {
+    const response = await this.client.responses.parse({
+      model: this.model,
+      store: false,
+      safety_identifier: identity.safetyIdentifier,
+      reasoning: { effort: "low" },
+      max_output_tokens: 1400,
+      input: [
+        { role: "system", content: SMART_GOAL_PROMPT },
+        { role: "user", content: `Starting goal:\n${goal}` },
+      ],
+      text: {
+        verbosity: "low",
+        format: zodTextFormat(GeneratedSmartGoalSchema, "smart_goal"),
+      },
+    });
+    if (!response.output_parsed) {
+      throw new AiRefusalError("A SMART goal draft could not be generated for this request.");
+    }
+    return response.output_parsed;
   }
 
   async generatePlan(

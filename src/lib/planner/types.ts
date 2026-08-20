@@ -73,6 +73,15 @@ export type GeneratedQuestion = {
   reason: string;
 };
 
+export type GeneratedSmartGoal = {
+  goal: string;
+  specific: string;
+  measurable: string;
+  achievable: string;
+  relevant: string;
+  timeBound: string;
+};
+
 export type Viewer = {
   id: string;
   name: string;
