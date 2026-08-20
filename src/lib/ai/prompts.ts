@@ -17,6 +17,7 @@ Turn the user's SMART goal and context into a realistic first-level plan.
 
 Requirements:
 - Choose one visually relevant emoji for the plan. Return only the emoji character in the emoji field, with no label or surrounding text.
+- Write a concise title that names the outcome. Never use the word “plan” in the title.
 - Return 3 to 8 ordered, concrete steps.
 - Each step must have a clear outcome, a useful description, and a realistic estimate in whole minutes.
 - Keep steps large enough that the user can break them down further.
