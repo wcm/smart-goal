@@ -3,6 +3,7 @@ import {
   clearTemporaryPlan,
   getPlan,
   listPlans,
+  renamePlan,
   savePlan,
 } from "@/lib/planner/repository";
 import type { PlanRecord } from "@/lib/planner/types";
@@ -34,5 +35,21 @@ describe("temporary plan storage", () => {
 
     expect(await getPlan("first", "guest-user", { temporary: true })).toBeNull();
     expect((await listPlans("guest-user", { temporary: true })).map((plan) => plan.id)).toEqual(["second"]);
+  });
+
+  it("renames the temporary plan and trims surrounding whitespace", async () => {
+    const plan = temporaryPlan("rename-me");
+    await savePlan(plan, { temporary: true });
+
+    const renamed = await renamePlan(plan, "  A clearer plan name  ", { temporary: true });
+
+    expect(renamed.title).toBe("A clearer plan name");
+    expect(renamed.updatedAt).not.toBe(plan.updatedAt);
+    expect((await getPlan(plan.id, plan.userId, { temporary: true }))?.title).toBe("A clearer plan name");
+  });
+
+  it("rejects an empty plan name", async () => {
+    await expect(renamePlan(temporaryPlan("empty-name"), "   ", { temporary: true }))
+      .rejects.toThrow("Add a plan name.");
   });
 });

@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Archive, ArrowUpRight, CircleCheck, CloudOff, MoreHorizontal, Sparkles, Trash2 } from "lucide-react";
+import { Archive, ArrowUpRight, CircleCheck, CloudOff, MoreHorizontal, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { ActivityGrid } from "@/components/activity-grid";
 import { GoalInputIcon } from "@/components/goal-input-icon";
 import { GuestUpgradeButton } from "@/components/guest-upgrade-button";
 import { PlanEmojiPicker } from "@/components/plan-emoji-picker";
+import { PlanRenameDialog } from "@/components/plan-rename-dialog";
 import { Button } from "@/components/ui/button";
-import { archivePlan, deletePlan, getActivity, listPlans, savePlan } from "@/lib/planner/repository";
+import { archivePlan, deletePlan, getActivity, listPlans, renamePlan, savePlan } from "@/lib/planner/repository";
 import { calculatePlanProgress, formatMinutes } from "@/lib/planner/tree";
 import type { ActivityEvent, PlanRecord, Viewer } from "@/lib/planner/types";
 import { asErrorMessage } from "@/lib/utils";
@@ -24,6 +25,8 @@ export function DashboardClient({ viewer }: { viewer: Viewer }) {
   const [goal, setGoal] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [renamingPlan, setRenamingPlan] = useState<PlanRecord | null>(null);
+  const [renameBusy, setRenameBusy] = useState(false);
 
   useEffect(() => {
     if (!viewer.isDemo) {
@@ -74,12 +77,28 @@ export function DashboardClient({ viewer }: { viewer: Viewer }) {
     }
   }
 
+  async function savePlanName(title: string) {
+    if (!renamingPlan || renameBusy) return;
+    setRenameBusy(true);
+    setError("");
+    try {
+      const updated = await renamePlan(renamingPlan, title, { temporary: viewer.isGuest });
+      setPlans((current) => current.map((item) => item.id === updated.id ? updated : item));
+      setRenamingPlan(null);
+    } catch (reason) {
+      setError(asErrorMessage(reason));
+    } finally {
+      setRenameBusy(false);
+    }
+  }
+
   function renderPlanActions(plan: PlanRecord) {
     return (
       <div className="card-menu-wrap">
         <button className="icon-button" onClick={() => setOpenMenu(openMenu === plan.id ? null : plan.id)} aria-label="Plan actions"><MoreHorizontal size={19} /></button>
         {openMenu === plan.id && (
           <div className="card-menu">
+            <button onClick={() => { setOpenMenu(null); setRenamingPlan(plan); }}><Pencil size={15} />Rename</button>
             {!viewer.isGuest && <button onClick={async () => { const updated = await archivePlan(plan); setPlans((current) => current.map((item) => item.id === updated.id ? updated : item)); setOpenMenu(null); }}><Archive size={15} />{plan.status === "active" ? "Archive" : "Restore"}</button>}
             <button className="danger" onClick={async () => { if (!window.confirm("Delete this plan permanently?")) return; await deletePlan(plan.id, { temporary: viewer.isGuest }); setPlans((current) => current.filter((item) => item.id !== plan.id)); }}><Trash2 size={15} />Delete</button>
           </div>
@@ -160,6 +179,12 @@ export function DashboardClient({ viewer }: { viewer: Viewer }) {
           </>
         )}
       </section>
+      <PlanRenameDialog
+        plan={renamingPlan}
+        busy={renameBusy}
+        onClose={() => setRenamingPlan(null)}
+        onSave={(title) => void savePlanName(title)}
+      />
     </main>
   );
 }

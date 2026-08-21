@@ -24,6 +24,7 @@ import { GuestUpgradeButton } from "@/components/guest-upgrade-button";
 import { StepTree } from "@/components/step-tree";
 import { PageBackLink } from "@/components/page-back-link";
 import { PlanEmojiPicker } from "@/components/plan-emoji-picker";
+import { PlanRenameDialog } from "@/components/plan-rename-dialog";
 import { AiClientError, postAi } from "@/lib/ai/client";
 import { GUEST_MAX_STEP_DEPTH, MAX_STEP_DEPTH } from "@/lib/config";
 import { clearGuestPlanSnapshot } from "@/lib/planner/guest-transfer";
@@ -31,6 +32,7 @@ import {
   archivePlan,
   deletePlan,
   getPlan,
+  renamePlan,
   savePlan,
   toggleStepCompletion,
 } from "@/lib/planner/repository";
@@ -38,6 +40,7 @@ import {
   buildStepTree,
   calculatePlanProgress,
   formatMinutes,
+  hasOnlyFirstStepLayer,
   replaceStepChildren,
   setStepCompletion,
 } from "@/lib/planner/tree";
@@ -164,6 +167,7 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
   const [upgradeReason, setUpgradeReason] = useState<UpgradeReason | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [planActionBusy, setPlanActionBusy] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -183,6 +187,7 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
     [plan],
   );
   const tree = useMemo(() => (plan ? buildStepTree(plan) : []), [plan]);
+  const hasOnlyFirstLayer = useMemo(() => plan ? hasOnlyFirstStepLayer(plan) : false, [plan]);
   const planContextItems = useMemo(() => plan ? getPlanContextItems(plan) : [], [plan]);
   const editedStep = useMemo(
     () => plan && editTarget && editTarget !== "plan" ? plan.steps.find((step) => step.id === editTarget) ?? null : null,
@@ -396,6 +401,20 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
     }
   }
 
+  async function savePlanName(title: string) {
+    if (!plan || planActionBusy) return;
+    setPlanActionBusy(true);
+    setError("");
+    try {
+      setPlan(await renamePlan(plan, title, { temporary: viewer.isGuest }));
+      setRenameOpen(false);
+    } catch (reason) {
+      setError(asErrorMessage(reason));
+    } finally {
+      setPlanActionBusy(false);
+    }
+  }
+
   async function removePlan() {
     if (!plan || planActionBusy) return;
     if (!window.confirm("Delete this plan permanently?")) return;
@@ -447,6 +466,7 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
           <button className="icon-button" onClick={() => setMenuOpen((open) => !open)} disabled={planActionBusy} aria-label="Plan actions" aria-expanded={menuOpen}><MoreHorizontal size={19} /></button>
           {menuOpen && (
             <div className="card-menu">
+              <button onClick={() => { setMenuOpen(false); setRenameOpen(true); }}><Pencil size={15} />Rename</button>
               {!viewer.isGuest && <button onClick={() => void toggleArchive()}><Archive size={15} />{plan.status === "active" ? "Archive" : "Restore"}</button>}
               <button className="danger" onClick={() => void removePlan()}><Trash2 size={15} />Delete</button>
             </div>
@@ -473,7 +493,7 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
 
       <section className="plan-steps-section">
         <div className="steps-heading"><h2>Steps</h2></div>
-        <StepTree nodes={tree} busyTarget={busyTarget} onToggle={toggle} onBreakdown={(step) => breakDown(step)} onEdit={(step) => setEditTarget(step.id)} isGuest={viewer.isGuest} />
+        <StepTree nodes={tree} busyTarget={busyTarget} onToggle={toggle} onBreakdown={(step) => breakDown(step)} onEdit={(step) => setEditTarget(step.id)} isGuest={viewer.isGuest} highlightFirstBreakdown={hasOnlyFirstLayer} />
       </section>
 
       <PlanContextEditorDialog
@@ -482,6 +502,12 @@ export function PlannerClient({ planId, viewer }: { planId: string; viewer: View
         busy={editBusy}
         onClose={() => setEditTarget(null)}
         onSave={(context) => void savePlanContext(context)}
+      />
+      <PlanRenameDialog
+        plan={renameOpen ? plan : null}
+        busy={planActionBusy}
+        onClose={() => setRenameOpen(false)}
+        onSave={(title) => void savePlanName(title)}
       />
       <StepEditorDialog
         step={editedStep}

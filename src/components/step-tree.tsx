@@ -20,6 +20,7 @@ export function StepTree({
   onBreakdown,
   onEdit,
   isGuest = false,
+  highlightFirstBreakdown = false,
 }: {
   nodes: StepTreeNode[];
   busyTarget: string | null;
@@ -27,7 +28,17 @@ export function StepTree({
   onBreakdown: (step: StepRecord) => void;
   onEdit: (step: StepRecord) => void;
   isGuest?: boolean;
+  highlightFirstBreakdown?: boolean;
 }) {
+  const highlightedStepId = highlightFirstBreakdown
+    ? nodes.find((node) => (
+      !node.isCompleted
+      && node.children.length === 0
+      && node.depth < MAX_STEP_DEPTH
+      && (!isGuest || node.depth < GUEST_MAX_STEP_DEPTH)
+    ))?.id ?? null
+    : null;
+
   return (
     <div className="step-tree">
       {nodes.map((node, index) => (
@@ -40,6 +51,7 @@ export function StepTree({
           onBreakdown={onBreakdown}
           onEdit={onEdit}
           isGuest={isGuest}
+          highlightBreakdown={node.id === highlightedStepId}
         />
       ))}
     </div>
@@ -54,6 +66,7 @@ function StepCard({
   onBreakdown,
   onEdit,
   isGuest,
+  highlightBreakdown,
 }: {
   node: StepTreeNode;
   index: number;
@@ -62,6 +75,7 @@ function StepCard({
   onBreakdown: (step: StepRecord) => void;
   onEdit: (step: StepRecord) => void;
   isGuest: boolean;
+  highlightBreakdown: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
@@ -120,7 +134,7 @@ function StepCard({
             ) : (
               <>
                 {!node.isCompleted && !hasChildren && !atLimit && (
-                  <Button size="sm" onClick={() => onBreakdown(node)} disabled={Boolean(busyTarget)} title={atGuestLimit ? "Sign in to unlock more levels" : undefined}>
+                  <Button className={highlightBreakdown ? "breakdown-ripple" : undefined} size="sm" onClick={() => onBreakdown(node)} disabled={Boolean(busyTarget)} title={atGuestLimit ? "Sign in to unlock more levels" : undefined}>
                     {atGuestLimit ? "Unlock next level" : "Break it down"}
                   </Button>
                 )}

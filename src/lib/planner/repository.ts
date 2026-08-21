@@ -354,6 +354,22 @@ export async function archivePlan(plan: PlanRecord, options: RepositoryOptions =
   }, options);
 }
 
+export async function renamePlan(
+  plan: PlanRecord,
+  title: string,
+  options: RepositoryOptions = {},
+) {
+  const trimmedTitle = title.trim();
+  if (!trimmedTitle) throw new Error("Add a plan name.");
+  if (trimmedTitle.length > 500) throw new Error("Plan names must be 500 characters or fewer.");
+  if (trimmedTitle === plan.title) return plan;
+  return savePlan({
+    ...plan,
+    title: trimmedTitle,
+    updatedAt: new Date().toISOString(),
+  }, options);
+}
+
 export async function deletePlan(planId: string, options: RepositoryOptions = {}) {
   if (options.temporary) {
     if (getTemporaryPlanSnapshot()?.id === planId) clearTemporaryPlan();

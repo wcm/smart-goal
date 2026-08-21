@@ -3,6 +3,7 @@ import {
   calculatePlanProgress,
   createStepRecords,
   formatMinutes,
+  hasOnlyFirstStepLayer,
   normalizeChildEstimates,
   parseMinutesInput,
   replaceStepChildren,
@@ -50,6 +51,29 @@ function plan(steps: StepRecord[]): PlanRecord {
     updatedAt: now,
   };
 }
+
+describe("hasOnlyFirstStepLayer", () => {
+  it("matches a newly generated plan with active steps only at depth one", () => {
+    expect(hasOnlyFirstStepLayer(plan([
+      step({ id: "first" }),
+      step({ id: "second", position: 1 }),
+    ]))).toBe(true);
+  });
+
+  it("stops matching once an active second layer exists", () => {
+    expect(hasOnlyFirstStepLayer(plan([
+      step({ id: "parent" }),
+      step({ id: "child", parentId: "parent", depth: 2 }),
+    ]))).toBe(false);
+  });
+
+  it("ignores archived deeper steps", () => {
+    expect(hasOnlyFirstStepLayer(plan([
+      step({ id: "parent" }),
+      step({ id: "archived-child", parentId: "parent", depth: 2, archivedAt: now }),
+    ]))).toBe(true);
+  });
+});
 
 describe("normalizeChildEstimates", () => {
   it("preserves the parent total exactly with positive whole minutes", () => {

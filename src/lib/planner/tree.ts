@@ -12,6 +12,11 @@ export function getActiveSteps(plan: PlanRecord) {
   return plan.steps.filter((step) => !step.archivedAt);
 }
 
+export function hasOnlyFirstStepLayer(plan: PlanRecord) {
+  const active = getActiveSteps(plan);
+  return active.length > 0 && active.every((step) => step.depth === 1);
+}
+
 export function buildStepTree(plan: PlanRecord): StepTreeNode[] {
   const active = getActiveSteps(plan);
   const byParent = new Map<string | null, StepRecord[]>();
